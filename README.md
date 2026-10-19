@@ -96,10 +96,9 @@ Verified in the real game (macOS, Valheim 1.0.20) unless noted:
   (making a new axe when the first breaks), asking how big a house should be, a small shelter, food for
   the leader, a deer trophy. Not every run passes yet: getting stuck in terrain and harassment by
   greylings still end some.
-- The first boss, Eikthyr, defeated together with a leader holding it in front: in Korean play and in 2
-  of 5 English fights (October 2026, the clip above is one). The others ended with Thorkell dead or the fight
-  stalled; he reflects after each and the next attempt cites what he learned. Fighting it alone is not
-  reliable yet.
+- The first boss, Eikthyr, defeated together with a leader holding it in front: in Korean play, and in
+  English 3 of 3 first attempts (fresh memory each) after the fixes found while filming, on top of 2 of 5
+  before them (the clip above is one). Fighting it alone is not reliable yet.
 - Playing in English (both games, chat and Thorkell's thinking) — added for this README.
 - Voice conversation (`gemini-3.8-live`) and the local laya model are built and tested offline but not
   used in play yet.

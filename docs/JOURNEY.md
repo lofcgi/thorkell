@@ -623,7 +623,10 @@ spiralling outward, and walking up to far unnamed creatures); trying to draw an 
 step in English** in 1248 s: axe 101 s, 20 wood 350 s (an axe broke and he made another), the house
 question, the shelter 379 s, food 55 s, and the deer trophy 203 s.
 
-So in English, `boss --together` won 2 of 5 fights in 6 runs (the first run stopped before the fight on a harness bug; one win is filmed for this README), and `fresh`
+With those fixes in, three first attempts at `boss --together` in English, each with a fresh memory,
+**all killed Eikthyr** (495 s, 755 s and 605 s).
+
+Before them, in English, `boss --together` won 2 of 5 fights in 6 runs (the first run stopped before the fight on a harness bug; one win is filmed for this README), and `fresh`
 passes the axe, 20 wood and the house question reliably, with the shelter, food and deer steps still not
 passing in one English run.
 
@@ -652,7 +655,7 @@ real Gemini model on simulated situations. "Simulator" means pytest scenarios ag
 | Doors and portals | Real game (`travel`) |
 | Axe from nothing, 20 wood, asking how big a house, building a small shelter, food, a deer trophy | Real game (`fresh`, Korean and English; every step in one English run on 2026-10-20, not every run) |
 | Finding food in a new world, hunting a deer for its trophy | Simulator only; in the real game the food step timed out before a validator fix, and the deer step was not reached |
-| Eikthyr with the leader | Real game: cleared on co-op runs 4 and 5 (Korean) and on 2 of 6 English runs (2026-10-20), with a test-only invulnerable bare-handed harness leader |
+| Eikthyr with the leader | Real game: cleared on co-op runs 4 and 5 (Korean), on 2 of 5 English fights, then 3 of 3 English first attempts after the fixes (2026-10-20), with a test-only invulnerable bare-handed harness leader |
 | Eikthyr alone | Not cleared: more than 15 attempts with one memory; best boss health 78% |
 | Fight judgment, reflection, following lessons, leaving a summon alone | Real model (`judge`) and real game |
 | Open requests: house, boar, food, small talk | Real model (`judge`) and partly real game |
