@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "t": "query_result",
+  "seq": 47,
+  "ts": 1790000005150,
+  "id": "q1",
+  "ok": true,
+  "data": [
+    {
+      "name": "곤봉",
+      "station": "",
+      "known": true
+    }
+  ]
+}

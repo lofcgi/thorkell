@@ -1,0 +1,690 @@
+{
+  "assemblies": [
+    "assembly_valheim.dll",
+    "assembly_utils.dll",
+    "Splatform.Steam.dll",
+    "assembly_guiutils.dll"
+  ],
+  "members": [
+    {
+      "type": "Version",
+      "member": "CurrentVersion",
+      "kind": "property",
+      "used_by": "Compat/GameApi"
+    },
+    {
+      "type": "Version",
+      "member": "c_networkVersion",
+      "kind": "field",
+      "used_by": "Compat/GameApi"
+    },
+    {
+      "type": "FileHelpers",
+      "member": "CloudStorageSupported",
+      "kind": "property",
+      "used_by": "Body/Isolation",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "FileHelpers",
+      "member": "CloudStorageSupportedAndEnabled",
+      "kind": "property",
+      "used_by": "Body/Isolation",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "FileHelpers",
+      "member": "CloudAndLocalStorageSupported",
+      "kind": "property",
+      "used_by": "Body/Isolation",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "Utils",
+      "member": "SetSaveDataPath",
+      "kind": "method",
+      "used_by": "Body/Isolation",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "FejdStartup",
+      "member": "ParseArguments",
+      "kind": "method",
+      "used_by": "Body/Join"
+    },
+    {
+      "type": "FejdStartup",
+      "member": "JoinServer",
+      "kind": "method",
+      "used_by": "Body/Join"
+    },
+    {
+      "type": "ZNet",
+      "member": "SetServerHost",
+      "kind": "method",
+      "used_by": "Body/Join"
+    },
+    {
+      "type": "ZNet",
+      "member": "CheckForIncommingServerConnections",
+      "kind": "method",
+      "used_by": "Host/LoopbackListener"
+    },
+    {
+      "type": "ZNet",
+      "member": "OnNewConnection",
+      "kind": "method",
+      "used_by": "Host/LoopbackListener"
+    },
+    {
+      "type": "ZNet",
+      "member": "RPC_PeerInfo",
+      "kind": "method",
+      "used_by": "Host/CrossplayPeerShim"
+    },
+    {
+      "type": "ZNet",
+      "member": "m_onlineBackend",
+      "kind": "field",
+      "used_by": "Host/CrossplayPeerShim"
+    },
+    {
+      "type": "ZNet",
+      "member": "m_hostSocket",
+      "kind": "field",
+      "used_by": "Host/LoopbackListener"
+    },
+    {
+      "type": "ZSteamSocket",
+      "member": "m_listenSocket",
+      "kind": "field",
+      "used_by": "Host/LoopbackListener"
+    },
+    {
+      "type": "PlayerController",
+      "member": "FixedUpdate",
+      "kind": "method",
+      "used_by": "Body/Input"
+    },
+    {
+      "type": "Player",
+      "member": "SetControls",
+      "kind": "method",
+      "used_by": "Body/Input"
+    },
+    {
+      "type": "Player",
+      "member": "AutoPickup",
+      "kind": "method",
+      "used_by": "Body/Input"
+    },
+    {
+      "type": "Player",
+      "member": "SetMouseLook",
+      "kind": "method",
+      "used_by": "Body/Input"
+    },
+    {
+      "type": "Character",
+      "member": "SetLookDir",
+      "kind": "method",
+      "used_by": "Body/Input"
+    },
+    {
+      "type": "Player",
+      "member": "GetHoverObject",
+      "kind": "method",
+      "used_by": "Body/Input"
+    },
+    {
+      "type": "Player",
+      "member": "FindHoverObject",
+      "kind": "method",
+      "used_by": "Body/Input"
+    },
+    {
+      "type": "ZInput",
+      "member": "GetButton",
+      "kind": "method",
+      "used_by": "Body/Input",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "ZInput",
+      "member": "GetButtonDown",
+      "kind": "method",
+      "used_by": "Body/Input",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "ZInput",
+      "member": "GetButtonUp",
+      "kind": "method",
+      "used_by": "Body/Input",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "Pathfinding",
+      "member": "GetPath",
+      "kind": "method",
+      "used_by": "Body/Skills/Navigate"
+    },
+    {
+      "type": "Floating",
+      "member": "GetLiquidLevel",
+      "kind": "method",
+      "used_by": "Body/Reflex/HazardVeto"
+    },
+    {
+      "type": "EffectArea",
+      "member": "IsPointPlus025InsideBurningArea",
+      "kind": "method",
+      "used_by": "Body/Reflex/HazardVeto"
+    },
+    {
+      "type": "Humanoid",
+      "member": "EquipItem",
+      "kind": "method",
+      "used_by": "Body/Skills"
+    },
+    {
+      "type": "Humanoid",
+      "member": "UnequipItem",
+      "kind": "method",
+      "used_by": "Body/Skills"
+    },
+    {
+      "type": "Humanoid",
+      "member": "StartAttack",
+      "kind": "method",
+      "used_by": "Body/Skills"
+    },
+    {
+      "type": "Humanoid",
+      "member": "Pickup",
+      "kind": "method",
+      "used_by": "Body/Skills"
+    },
+    {
+      "type": "Humanoid",
+      "member": "DropItem",
+      "kind": "method",
+      "used_by": "Body/Skills"
+    },
+    {
+      "type": "Humanoid",
+      "member": "ConsumeItem",
+      "kind": "method",
+      "used_by": "Body/Skills"
+    },
+    {
+      "type": "Humanoid",
+      "member": "CanConsumeItem",
+      "kind": "method",
+      "used_by": "Body/Skills"
+    },
+    {
+      "type": "Inventory",
+      "member": "AddItem",
+      "kind": "method",
+      "used_by": "tests/native fixtures"
+    },
+    {
+      "type": "InventoryGui",
+      "member": "RepairOneItem",
+      "kind": "method",
+      "used_by": "Body/Skills/Repair"
+    },
+    {
+      "type": "InventoryGui",
+      "member": "SetRecipe",
+      "kind": "method",
+      "used_by": "Body/Skills/Craft"
+    },
+    {
+      "type": "InventoryGui",
+      "member": "OnCraftPressed",
+      "kind": "method",
+      "used_by": "Body/Skills/Craft"
+    },
+    {
+      "type": "CookingStation",
+      "member": "IsFireLit",
+      "kind": "method",
+      "used_by": "Body/Skills/Stations"
+    },
+    {
+      "type": "Character",
+      "member": "RPC_Damage",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "Humanoid",
+      "member": "BlockAttack",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "DamageText",
+      "member": "AddInworldText",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "Player",
+      "member": "AddKnownItem",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "Player",
+      "member": "AddKnownRecipe",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "Player",
+      "member": "AddKnownPiece",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "Player",
+      "member": "AddKnownStation",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "Player",
+      "member": "AddKnownText",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "Player",
+      "member": "AddKnownBiome",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "Player",
+      "member": "OnDeath",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "Player",
+      "member": "OnSkillLevelup",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "Raven",
+      "member": "AddTempText",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "MessageHud",
+      "member": "ShowMessage",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "MessageHud",
+      "member": "QueueUnlockMsg",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "Chat",
+      "member": "OnNewChatMessage",
+      "kind": "method",
+      "used_by": "Body/Events, Host/ChatNames"
+    },
+    {
+      "type": "Chat",
+      "member": "SendText",
+      "kind": "method",
+      "used_by": "Body/Skills/Say, Host/LeaderChat"
+    },
+    {
+      "type": "EnemyHud",
+      "member": "m_huds",
+      "kind": "field",
+      "used_by": "Body/Perception"
+    },
+    {
+      "type": "BaseAI",
+      "member": "IsEnemy",
+      "kind": "method",
+      "used_by": "Body/Perception"
+    },
+    {
+      "type": "BaseAI",
+      "member": "IsAlerted",
+      "kind": "method",
+      "used_by": "Body/Perception"
+    },
+    {
+      "type": "PlatformPrefs",
+      "member": "SetFloat",
+      "kind": "method",
+      "used_by": "Compat/Isolation",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "PlatformPrefs",
+      "member": "SetInt",
+      "kind": "method",
+      "used_by": "Compat/Isolation",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "PlatformPrefs",
+      "member": "SetString",
+      "kind": "method",
+      "used_by": "Compat/Isolation",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "PlatformPrefs",
+      "member": "SetBool",
+      "kind": "method",
+      "used_by": "Compat/Isolation",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "PlatformPrefs",
+      "member": "DeleteKey",
+      "kind": "method",
+      "used_by": "Compat/Isolation",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "PlatformPrefs",
+      "member": "DeleteAll",
+      "kind": "method",
+      "used_by": "Compat/Isolation",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "PlatformPrefs",
+      "member": "Save",
+      "kind": "method",
+      "used_by": "Compat/Isolation",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "CustomLogger",
+      "member": "SetupSymbolicLink",
+      "kind": "method",
+      "used_by": "Compat/Isolation"
+    },
+    {
+      "type": "Splatform.Steam.SteamCloud",
+      "member": "IsEnabled",
+      "kind": "property",
+      "used_by": "Compat/Isolation",
+      "assembly": "Splatform.Steam.dll"
+    },
+    {
+      "type": "Utils",
+      "member": "GetSaveDataPath",
+      "kind": "method",
+      "used_by": "Compat/Isolation",
+      "assembly": "assembly_utils.dll"
+    },
+    {
+      "type": "PlatformInitializer",
+      "member": "InitializeSaveDataStorage",
+      "kind": "method",
+      "used_by": "Compat/Isolation"
+    },
+    {
+      "type": "FejdStartup",
+      "member": "set_ServerPassword",
+      "kind": "method",
+      "used_by": "Body/Join"
+    },
+    {
+      "type": "FejdStartup",
+      "member": "LoadMainScene",
+      "kind": "method",
+      "used_by": "Body/Join, tests/native harness"
+    },
+    {
+      "type": "ZSteamSocket",
+      "member": "m_hostSocket",
+      "kind": "field",
+      "used_by": "Host/LoopbackListener"
+    },
+    {
+      "type": "ZSteamSocket",
+      "member": "Accept",
+      "kind": "method",
+      "used_by": "Host/LoopbackListener"
+    },
+    {
+      "type": "ZNet",
+      "member": "OnDestroy",
+      "kind": "method",
+      "used_by": "Host/LoopbackListener"
+    },
+    {
+      "type": "ZNet",
+      "member": "OpenServer",
+      "kind": "method",
+      "used_by": "Host/LoopbackListener"
+    },
+    {
+      "type": "ZRpc",
+      "member": "GetSocket",
+      "kind": "method",
+      "used_by": "Host/CrossplayPeerShim"
+    },
+    {
+      "type": "PlayerController",
+      "member": "LateUpdate",
+      "kind": "method",
+      "used_by": "Body/InputLock"
+    },
+    {
+      "type": "ZoneSystem",
+      "member": "m_locations",
+      "kind": "field",
+      "used_by": "tests/native harness"
+    },
+    {
+      "type": "ZoneSystem/ZoneLocation",
+      "member": "m_prefabName",
+      "kind": "field",
+      "used_by": "tests/native harness"
+    },
+    {
+      "type": "ZoneSystem/ZoneLocation",
+      "member": "m_enable",
+      "kind": "field",
+      "used_by": "tests/native harness"
+    },
+    {
+      "type": "PlayFabManager",
+      "member": "IsLoggedIn",
+      "kind": "property",
+      "used_by": "tests/native harness"
+    },
+    {
+      "type": "PlayerProfile",
+      "member": "m_firstSpawn",
+      "kind": "field",
+      "used_by": "Body/Join"
+    },
+    {
+      "type": "Chat",
+      "member": "AddInworldText",
+      "kind": "method",
+      "used_by": "Host/ChatNames"
+    },
+    {
+      "type": "Chat",
+      "member": "m_hideTimer",
+      "kind": "field",
+      "used_by": "Host/ChatNames"
+    },
+    {
+      "type": "ZSteamSocket",
+      "member": "m_con",
+      "kind": "field",
+      "used_by": "Host/LoopbackListener"
+    },
+    {
+      "type": "Terminal",
+      "member": "m_chatBuffer",
+      "kind": "field",
+      "used_by": "tests/native harness"
+    },
+    {
+      "type": "InventoryGui",
+      "member": "m_availableRecipes",
+      "kind": "field",
+      "used_by": "Body/Craft"
+    },
+    {
+      "type": "InventoryGui",
+      "member": "UpdateCraftingPanel",
+      "kind": "method",
+      "used_by": "Body/Craft"
+    },
+    {
+      "type": "Player",
+      "member": "m_placePressedTime",
+      "kind": "field",
+      "used_by": "Body/Place"
+    },
+    {
+      "type": "Player",
+      "member": "m_placeRotation",
+      "kind": "field",
+      "used_by": "Body/Place"
+    },
+    {
+      "type": "Player",
+      "member": "m_buildPieces",
+      "kind": "field",
+      "used_by": "Body/Place"
+    },
+    {
+      "type": "Player",
+      "member": "m_placementStatus",
+      "kind": "field",
+      "used_by": "Body/Place"
+    },
+    {
+      "type": "Player",
+      "member": "m_placeRayMask",
+      "kind": "field",
+      "used_by": "Body/PlaceAim"
+    },
+    {
+      "type": "Player",
+      "member": "m_placeWaterRayMask",
+      "kind": "field",
+      "used_by": "Body/PlaceAim"
+    },
+    {
+      "type": "Player",
+      "member": "PieceRayTest",
+      "kind": "method",
+      "used_by": "Body/PlaceAim"
+    },
+    {
+      "type": "Player",
+      "member": "m_knownRecipes",
+      "kind": "field",
+      "used_by": "Body/Menus"
+    },
+    {
+      "type": "Raven",
+      "member": "m_instance",
+      "kind": "field",
+      "used_by": "Body/Snapshot"
+    },
+    {
+      "type": "Raven",
+      "member": "IsSpawned",
+      "kind": "method",
+      "used_by": "Body/Snapshot"
+    },
+    {
+      "type": "Minimap",
+      "member": "m_pins",
+      "kind": "field",
+      "used_by": "Body/Snapshot"
+    },
+    {
+      "type": "TextViewer",
+      "member": "ShowText",
+      "kind": "method",
+      "used_by": "Body/Hooks"
+    },
+    {
+      "type": "Ragdoll",
+      "member": "Awake",
+      "kind": "method",
+      "used_by": "Body/Events"
+    },
+    {
+      "type": "CameraEffects",
+      "member": "SetMotionBlur",
+      "kind": "method",
+      "used_by": "Body/Perception/Sight"
+    },
+    {
+      "type": "TeleportWorld",
+      "member": "TargetFound",
+      "kind": "method",
+      "used_by": "Body/Perception/Scanner"
+    },
+    {
+      "type": "Player",
+      "member": "m_crouchToggled",
+      "kind": "field",
+      "used_by": "Body/Actions/Motor"
+    },
+    {
+      "type": "Localization",
+      "member": "SetStartupLanguage",
+      "kind": "method",
+      "used_by": "Compat/GameLanguage",
+      "assembly": "assembly_guiutils.dll"
+    },
+    {
+      "type": "Localization",
+      "member": "m_instance",
+      "kind": "field",
+      "used_by": "Compat/GameLanguage",
+      "assembly": "assembly_guiutils.dll"
+    },
+    {
+      "type": "Localization",
+      "member": "Clear",
+      "kind": "method",
+      "used_by": "Compat/GameLanguage",
+      "assembly": "assembly_guiutils.dll"
+    },
+    {
+      "type": "Localization",
+      "member": "SetupLanguage",
+      "kind": "method",
+      "used_by": "Compat/GameLanguage",
+      "assembly": "assembly_guiutils.dll"
+    },
+    {
+      "type": "Location",
+      "member": "IsInsideNoBuildLocation",
+      "kind": "method",
+      "used_by": "Body/Perception/Sites"
+    }
+  ]
+}

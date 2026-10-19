@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "t": "progress",
+  "seq": 45,
+  "ts": 1790000001800,
+  "cmd_id": "c8",
+  "metrics": {
+    "remaining_m": 12.25,
+    "stalls": 0
+  }
+}

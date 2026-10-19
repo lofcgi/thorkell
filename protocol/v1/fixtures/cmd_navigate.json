@@ -1,0 +1,24 @@
+{
+  "v": 1,
+  "t": "cmd",
+  "seq": 7,
+  "ts": 1790000001300,
+  "id": "c8",
+  "op": "navigate",
+  "args": {
+    "target": {
+      "pos": [
+        40.0,
+        32.0,
+        -12.5
+      ]
+    },
+    "run": true,
+    "arrive_radius": 2.0
+  },
+  "mode": "replace",
+  "priority": 1,
+  "based_on_seq": 43,
+  "ttl_ms": 2000,
+  "resume": true
+}

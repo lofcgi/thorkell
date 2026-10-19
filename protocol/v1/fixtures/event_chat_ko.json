@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "t": "event",
+  "seq": 42,
+  "ts": 1790000001100,
+  "kind": "chat",
+  "tick": 5130,
+  "data": {
+    "from": "leader",
+    "talker": "normal",
+    "text": "토르켈, 나무 좀 해줘. 2026-10-02 까지!"
+  }
+}

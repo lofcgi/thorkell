@@ -1,0 +1,27 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+.idea/
+TestResults/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 런타임 산출물 (vendor zip, 실게임 리포트, 실행 로그)
+vendor/
+artifacts/
+runs/
+*.log
+
+# 비밀: op:// 참조만 담더라도 커밋하지 않는다
+.env*
+brain/secrets.op
+
+.DS_Store

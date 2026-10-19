@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "t": "welcome",
+  "seq": 2,
+  "ts": 1790000000010,
+  "accepted_caps": [
+    "observe",
+    "move",
+    "act",
+    "say"
+  ],
+  "state_hz": 10,
+  "scene_hz": 2
+}

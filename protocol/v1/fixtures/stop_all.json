@@ -1,0 +1,7 @@
+{
+  "v": 1,
+  "t": "stop_all",
+  "seq": 9,
+  "ts": 1790000001500,
+  "reason": "chat_stop_phrase"
+}

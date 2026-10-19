@@ -1,0 +1,8 @@
+{
+  "v": 1,
+  "t": "cancel",
+  "seq": 8,
+  "ts": 1790000001400,
+  "cmd_id": "c8",
+  "reason": "user_stop"
+}

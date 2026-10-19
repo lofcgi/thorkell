@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 테스트 전용 플러그인. 격리된 테스트 런타임에만 설치하고 사람의 게임에는 절대 넣지 않는다.
+       Body/Host 상태는 리플렉션으로 읽는다: 각 런타임에는 둘 중 하나만 설치되기 때문이다. -->
+  <Import Project="../../../plugin/Plugin.props" />
+  <PropertyGroup>
+    <AssemblyName>Thorkell.NativeHarness</AssemblyName>
+    <RootNamespace>Thorkell.NativeHarness</RootNamespace>
+  </PropertyGroup>
+</Project>

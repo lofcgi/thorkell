@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "t": "config",
+  "seq": 11,
+  "ts": 1790000005200,
+  "values": {
+    "state_hz": 10,
+    "self_defense": true
+  }
+}

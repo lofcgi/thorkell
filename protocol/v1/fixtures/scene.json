@@ -1,0 +1,30 @@
+{
+  "v": 1,
+  "t": "scene",
+  "seq": 41,
+  "ts": 1790000001001,
+  "tick": 5121,
+  "data": {
+    "nearby": [
+      {
+        "id": "76561198012345678:4242",
+        "class": "creature",
+        "name": "그레이드워프",
+        "distance": 7.5,
+        "bearing": -30.0
+      }
+    ],
+    "boss_bars": [
+      {
+        "id": "76561198012345678:5120",
+        "name": "에이크쉬르",
+        "health": 0.78
+      }
+    ],
+    "env": {
+      "day": 3,
+      "day_fraction": 0.62,
+      "weather": "Clear"
+    }
+  }
+}

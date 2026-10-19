@@ -1,0 +1,25 @@
+{
+  "v": 1,
+  "t": "hello",
+  "seq": 1,
+  "ts": 1790000000005,
+  "role": "body",
+  "proto": [
+    1,
+    0
+  ],
+  "plugin": "0.1.0",
+  "game": {
+    "version": "1.0.16",
+    "network": 40,
+    "assembly_sha256": "abababababababababababababababababababababababababababababababab"
+  },
+  "session": "fedcba9876543210fedcba9876543210",
+  "caps": [
+    "observe",
+    "move",
+    "act",
+    "say"
+  ],
+  "mac": "27286990f927c8267d2c38396b3defffbb6d6ee01314bfae9a6294086fa67e03"
+}

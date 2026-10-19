@@ -1,0 +1,27 @@
+{
+  "network_constant": {
+    "type": "Version",
+    "field": "c_networkVersion"
+  },
+  "min_bepinex": "5.4.23",
+  "builds": [
+    {
+      "game": "1.0.16",
+      "network": 40,
+      "unity": "6000.0.75f1",
+      "sha256": {
+        "assembly_valheim.dll": "141dce5a89f04cf537112b87cf2a92c9b31a54685068482d5a1d13e04403b986",
+        "assembly_utils.dll": "4ba2cc8706879f3324db944831e5c93304bc3b60b13c507767d28547d22930e3"
+      }
+    },
+    {
+      "game": "1.0.20",
+      "network": 41,
+      "unity": "6000.0.75f1",
+      "sha256": {
+        "assembly_valheim.dll": "584ffa945642e5f6af7b027d77f14009ca2553ea6d22ab4b810a51513628afad",
+        "assembly_utils.dll": "f1a71a7b1d315d476f21d3c45f96e79a9d94cc9911db523704dd496aea76f3e3"
+      }
+    }
+  ]
+}

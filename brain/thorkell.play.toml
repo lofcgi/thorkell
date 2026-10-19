@@ -1,0 +1,25 @@
+# `thorkell play`용 두뇌 설정: 대화는 게임 채팅(과 play 콘솔)만, 계획은 gemini-3.8-flash, 위협 대응은 Jev.
+# 리더 이름은 게임에서 읽어 오므로 여기 적지 않는다. 키는 레포 루트 .env에서 주입한다:
+#   cd brain && uv run --env-file ../.env thorkell play --rehearsal helloworld --config thorkell.play.toml
+# --config 없이 실행하면 모델 없이 규칙만 쓴다(정해진 말만 알아듣는다: 나무 N개, 따라와, 기다려, 멈춰, 뭐해).
+runs_dir = "runs"
+
+[bridge]
+port = 47811
+
+[planner]
+backend = "gemini"
+model = "gemini-3.8-flash"
+thinking = "low"
+
+# 토르켈 자신의 화면을 보고 이해한다(픽셀 비전). 리더가 말할 때, 큰 것을 처음 볼 때 본다.
+[vision]
+backend = "gemini"
+model = "gemini-3.5-flash-lite"
+resolution = "low"
+thinking = "minimal"
+
+[decide]
+threat_response = "jev"
+speak_worthy = "rules"
+intent_guard = "rules"

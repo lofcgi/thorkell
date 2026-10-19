@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "t": "result",
+  "seq": 46,
+  "ts": 1790000005000,
+  "cmd_id": "c8",
+  "status": "succeeded",
+  "code": "arrived",
+  "evidence": {
+    "distance_m": 1.4,
+    "duration_ms": 3700,
+    "retries": 0
+  }
+}

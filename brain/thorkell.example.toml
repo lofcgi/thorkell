@@ -1,0 +1,19 @@
+# Thorkell brain config. Copy to thorkell.toml and adjust. Secrets never go here (see secrets.op.example).
+
+runs_dir = "runs"
+
+[bridge]
+port = 47811
+
+[leader]
+name = "Leader"          # 사람 캐릭터 이름 (게임에 표시되는 이름)
+
+[planner]
+backend = "none"         # "gemini"이면 GEMINI_API_KEY 필요. "none"이면 규칙 템플릿만 쓴다.
+model = "gemini-3.8-flash"
+thinking = "low"
+
+[decide]
+threat_response = "rules"   # rules | jev (TYPESAFE_API_KEY 필요) | laya (로컬 laya-serve)
+speak_worthy = "rules"
+intent_guard = "rules"

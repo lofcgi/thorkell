@@ -1,0 +1,21 @@
+{
+  "v": 1,
+  "t": "event",
+  "seq": 43,
+  "ts": 1790000001200,
+  "kind": "damage_taken",
+  "tick": 5140,
+  "data": {
+    "attacker_id": "76561198012345678:4242",
+    "attacker_name": "그레이드워프",
+    "amount": 6.5,
+    "types": {
+      "blunt": 6.5
+    },
+    "blocked": false,
+    "parried": false,
+    "hp_after": 17.5,
+    "attacker_kind": "creature",
+    "attacker_size": "medium"
+  }
+}

@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../Plugin.props" />
+  <PropertyGroup>
+    <AssemblyName>Thorkell.Body</AssemblyName>
+    <RootNamespace>Thorkell.Body</RootNamespace>
+  </PropertyGroup>
+</Project>

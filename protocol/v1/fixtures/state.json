@@ -1,0 +1,25 @@
+{
+  "v": 1,
+  "t": "state",
+  "seq": 40,
+  "ts": 1790000001000,
+  "tick": 5120,
+  "data": {
+    "pos": [
+      12.5,
+      31.25,
+      -7.0
+    ],
+    "yaw": 91.5,
+    "hp": 24.0,
+    "hp_max": 25.0,
+    "stamina": 48.5,
+    "stamina_max": 50.0,
+    "action": {
+      "cmd_id": "c7",
+      "op": "navigate",
+      "phase": "running"
+    },
+    "reflex": "self_defense"
+  }
+}

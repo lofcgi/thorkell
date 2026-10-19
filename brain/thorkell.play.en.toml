@@ -1,0 +1,24 @@
+# `thorkell play`/scenarios in English: both games, the leader's words and Thorkell's thinking and speech.
+# Same models as thorkell.play.toml. Keys come from the repo-root .env:
+#   cd brain && uv run --env-file ../.env thorkell play --rehearsal thorkell-en --new --config thorkell.play.en.toml
+language = "en"
+runs_dir = "runs"
+
+[bridge]
+port = 47811
+
+[planner]
+backend = "gemini"
+model = "gemini-3.8-flash"
+thinking = "low"
+
+[vision]
+backend = "gemini"
+model = "gemini-3.5-flash-lite"
+resolution = "low"
+thinking = "minimal"
+
+[decide]
+threat_response = "jev"
+speak_worthy = "rules"
+intent_guard = "rules"

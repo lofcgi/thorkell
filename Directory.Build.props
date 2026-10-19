@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
+    <GameRoot Condition="'$(GameRoot)' == ''">$(HOME)/Library/Application Support/Steam/steamapps/common/Valheim</GameRoot>
+    <GameManaged>$(GameRoot)/Valheim.app/Contents/Resources/Data/Managed</GameManaged>
+    <!-- 컴파일은 게임 설치본의 BepInEx(5.4.2333)가 아니라 vendor에 고정한 1.0 대응판을 기준으로 한다. -->
+    <BepInExPack>$(MSBuildThisFileDirectory)vendor/BepInExPack_Valheim-5.4.2351/BepInExPack_Valheim</BepInExPack>
+    <BepInExCore>$(BepInExPack)/BepInEx/core</BepInExCore>
+  </PropertyGroup>
+</Project>

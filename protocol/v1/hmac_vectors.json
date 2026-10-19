@@ -1,0 +1,23 @@
+[
+  {
+    "token": "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
+    "nonce": "0123456789abcdef0123456789abcdef",
+    "role": "body",
+    "session": "fedcba9876543210fedcba9876543210",
+    "mac": "27286990f927c8267d2c38396b3defffbb6d6ee01314bfae9a6294086fa67e03"
+  },
+  {
+    "token": "0000000000000000000000000000000000000000000000000000000000000000",
+    "nonce": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "role": "host",
+    "session": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "mac": "43d7dd5166080864f1358b59d1c69842c26a0bee0851299d4386002112a6a173"
+  },
+  {
+    "token": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+    "nonce": "ffffffffffffffffffffffffffffffff",
+    "role": "body",
+    "session": "00000000000000000000000000000001",
+    "mac": "4882d57504ce843d4df1640c3f75ab0fe6361982d5d0a56f829e3875308168b5"
+  }
+]
