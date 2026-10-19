@@ -30,6 +30,7 @@ from thorkell.mind.speech import Line
 from thorkell.mind.store import Episode, Store, general
 from thorkell.models.gemini import ModelError
 from thorkell.plan.planner import Planner
+from thorkell.plan.situation import DUSK
 from thorkell.plan.tactics import JudgmentRejected, Tactician
 from thorkell.world.memory import WorldMemory
 from thorkell.world.serialize import decision_state
@@ -40,6 +41,8 @@ log = logging.getLogger(__name__)
 NORMAL_EARSHOT_M = 14.0
 
 SUSPENDED_EXPIRY_S = 600.0
+# 다쳐서 미룬 부탁은 체력이 이만큼(비율) 돌아오면 이어 간다.
+HEALED = 0.8
 # 할 일이 없을 때 리더와 이만큼 넘게 떨어지면 곁으로 간다(동료로서의 기본 자세).
 # "기다려"라고 하면 하지 않는다.
 FOLLOW_GAP_M = 12.0
@@ -111,6 +114,8 @@ class Controller:
         # 끝난 목표(최근 것만). 상태 질문과 진단에 쓴다.
         self.finished: list[Goal] = []
         self.suspended: list[Goal] = []
+        # 다치거나 날이 저물어 계획이 멈춘 부탁. 나으면(아침이 되면) 다시 생각해서 이어 간다.
+        self.deferred: list[Goal] = []
         self.pending: list[Goal] = []
         self._events: asyncio.Queue[protocol.Event] = asyncio.Queue()
         self._threat_checks: dict[str, asyncio.Task[None]] = {}
@@ -395,6 +400,11 @@ class Controller:
                     )
                 await self._adopt(best)
 
+        # 미뤄 둔 리더의 부탁은 하는 일이 없을 때뿐 아니라 덜 중요한 자기 일(따라다니기)을 하는 중에도
+        # 다시 본다. 실게임(2026-10-20): 다쳐서 미룬 뒤 쉬며 따라다니다가, 다 나아도 부탁으로 돌아가지 않았다.
+        idle_enough = self.active is None or self.active.goal.tier > Tier.USER
+        if idle_enough and not any(g.tier <= Tier.USER for g in self.pending):
+            self._take_up_deferred()
         if self.active is None:
             self.suspended = [g for g in self.suspended if time.monotonic() - g.created < SUSPENDED_EXPIRY_S]
             if self.suspended:
@@ -406,6 +416,44 @@ class Controller:
                 return
         if self.active is None and not self.pending:
             await self._idle()
+
+    async def _defer(self, goal: Goal, outcome: SkillOutcome) -> None:
+        """A planned request stopped by its own abort condition (hurt, dusk, night): not the end of it.
+        Real game 2026-10-20: hurt by greylings while chopping, Thorkell dropped two of the leader's
+        requests for good. A person patches up and goes back to the job."""
+        reason = outcome.code.split(":", 1)[1]
+        goal.status = "deferred"
+        goal.progress["deferred"] = reason
+        for key in ("plan", "step"):
+            goal.progress.pop(key, None)
+        goal.progress.setdefault("attempts", []).append(outcome.detail_ko)
+        self.deferred.append(goal)
+        self._decide("suspend", goal, outcome.detail_ko)
+        later = (
+            tr("다 나으면 이어서 할게.", "I'll get back to it once I've healed.")
+            if reason == "hp_below"
+            else tr("날이 밝으면 이어서 할게.", "I'll pick it up again in the morning.")
+        )
+        await self._speak(f"{outcome.detail_ko}. {later}", "report")
+
+    def _take_up_deferred(self) -> None:
+        state = self.session.state.data if self.session.state else {}
+        env = self.session.scene.data.get("env", {}) if self.session.scene else {}
+        for goal in list(self.deferred):
+            reason = goal.progress.get("deferred")
+            if reason == "hp_below":
+                ready = bool(state) and state["hp"] / max(1.0, state["hp_max"]) >= HEALED
+            else:
+                ready = bool(env) and not env.get("night") and float(env.get("day_fraction", 1.0)) < DUSK
+            if ready:
+                self.deferred.remove(goal)
+                goal.status = "pending"
+                goal.progress.pop("deferred", None)
+                self._decide(
+                    "resume", goal, tr(f"{goal.describe_ko()} 다시", f"back to {goal.describe_ko()}")
+                )
+                self.request(goal)
+                return
 
     def _face(self, creature: dict[str, Any]) -> None:
         """Something big has noticed Thorkell or hit him: think what it is and how to face it (fight.py)."""
@@ -541,13 +589,14 @@ class Controller:
             self.active = None
             for fight in self._fights_in(goal):
                 self._reflect_on(fight, "stopped" if fight.status in ("active", "dropped") else fight.outcome)
-        for goal in self.suspended + self.pending:
+        for goal in self.suspended + self.pending + self.deferred:
             goal.status = "dropped"
             self._decide("drop", goal, reason)
             for fight in self._fights_in(goal):
                 self._reflect_on(fight, "stopped")
         self.suspended.clear()
         self.pending.clear()
+        self.deferred.clear()
 
     async def _cancel(self, active: _Active) -> None:
         active.task.cancel()
@@ -580,6 +629,9 @@ class Controller:
                 self._reflect_on(fight, "stopped")
             return
         outcome = active.task.result()
+        if goal.kind == "request" and outcome.code.startswith("aborted:"):
+            await self._defer(goal, outcome)
+            return
         if goal.kind == "eat":
             self._ate_at_seq = self.session.scene.seq if self.session.scene else -1
         goal.status = "done" if outcome.ok else "failed"

@@ -612,6 +612,17 @@ Filming (2026-10-20) ran the scenes again with recording and turned up more prob
 | `fresh` (filming) | The flattest ground was the start temple's platform, where the game forbids building; then no flat site within 40 m | Sites skip no-build zones (`f0a6779`), and he looks 50 m out in eight directions before asking where to build (`ffb6675`). The shelter step still failed in the last filmed run |
 | `fresh` (filming) | The recordings and a joined copy filled the disk | Pieces are read in place, the recorder writes 4 Mbps |
 
+After publishing, more English `fresh` runs (7 to 14) turned up and fixed: no flat 6x5 m site within
+50 m of the spawn hill (now a second, slightly uneven pass, `43b9e37`); requests ended for good when the
+plan's own "stop if badly hurt / at dusk" fired (now set aside and taken up again when healed or in the
+morning, also while following, `430c201`); trees beyond the 48 nearest things not reported, so "I don't see any
+trees" next to a forest (`2b7a94c`); stuck in a hollow by a fallen log, side-stepping only (now also
+backing away and hopping forward); looking for trees and for deer only around where he stood (now
+spiralling outward, and walking up to far unnamed creatures); trying to draw an axe while swimming; and
+"I don't see any trees" when the only trees were across water (now said as such). **Run 14 passed every
+step in English** in 1248 s: axe 101 s, 20 wood 350 s (an axe broke and he made another), the house
+question, the shelter 379 s, food 55 s, and the deer trophy 203 s.
+
 So in English, `boss --together` won 2 of 5 fights in 6 runs (the first run stopped before the fight on a harness bug; one win is filmed for this README), and `fresh`
 passes the axe, 20 wood and the house question reliably, with the shelter, food and deer steps still not
 passing in one English run.
@@ -639,7 +650,7 @@ real Gemini model on simulated situations. "Simulator" means pytest scenarios ag
 | Shelter, arrows, bow hunting a boar, cooking | Real game (`skills`, twice in a row) |
 | Seeing with his own screen (portal, sign, leader) | Real game (`sight`) |
 | Doors and portals | Real game (`travel`) |
-| Axe from nothing, 20 wood, asking how big a house, building a small shelter | Real game (`fresh`, Korean and English; not every run) |
+| Axe from nothing, 20 wood, asking how big a house, building a small shelter, food, a deer trophy | Real game (`fresh`, Korean and English; every step in one English run on 2026-10-20, not every run) |
 | Finding food in a new world, hunting a deer for its trophy | Simulator only; in the real game the food step timed out before a validator fix, and the deer step was not reached |
 | Eikthyr with the leader | Real game: cleared on co-op runs 4 and 5 (Korean) and on 2 of 6 English runs (2026-10-20), with a test-only invulnerable bare-handed harness leader |
 | Eikthyr alone | Not cleared: more than 15 attempts with one memory; best boss health 78% |

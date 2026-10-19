@@ -181,3 +181,28 @@ async def test_a_plan_that_gets_partway_is_followed_by_thinking_again(make_rig: 
     rig.world.leader_says("도끼 만들어 줘")
     await rig.until(lambda: "다 모았으니 이제 만들어 볼게" in rig.said())
     assert "gather_wood(count=3): 됨" in model.prompts[1]
+
+
+async def test_a_job_stopped_by_getting_hurt_is_picked_up_after_healing(make_rig: Callable[..., Any]) -> None:
+    # 실게임(2026-10-20): 나무를 하다 그레이링에게 맞아 "많이 다쳐서 멈췄어"로 리더의 부탁 둘을 끝내고 잊었다.
+    # 사람은 몸을 추스른 뒤 하던 일로 돌아간다.
+    hurt_stop = {**PLAN, "abort_if": [{"cond": "hp_below", "value": 0.5}]}
+    model = ScriptedModel(hurt_stop, PLAN)
+    rig: Rig = await make_rig(planner=Planner(model))
+    rig.controller.stance = "wait"
+    rig.world.leader_says("토르켈, 나무 좀 해줘")
+    await rig.until(
+        lambda: rig.controller.current() is not None and rig.world.commands.get("attack", 0) > 0, 30
+    )
+    rig.world.bot.hp = 5.0
+    await rig.until(lambda: any("다 나으면" in text for text in rig.said()), 20)
+    # 쉬는 동안 리더를 따라다니기 시작해도(자기 일) 다 나으면 리더의 부탁으로 돌아간다(실게임 2026-10-20).
+    from thorkell.control.goals import Goal, Tier
+
+    rig.controller.request(Goal("follow", Tier.AGENDA, source="self"))
+    await rig.until(lambda: (g := rig.controller.current()) is not None and g.kind == "follow", 10)
+    rig.world.bot.hp = rig.world.bot.hp_max
+    await rig.until(lambda: (g := rig.controller.current()) is not None and g.kind == "request", 5)
+    await rig.until(lambda: rig.wood() >= 10, 90)
+    assert len(model.prompts) == 2
+    assert "많이 다쳐서 멈췄어" in model.prompts[1]

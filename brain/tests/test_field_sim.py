@@ -101,3 +101,18 @@ async def test_without_a_bow_it_sneaks_up_on_a_deer_once_it_knows_they_run(
     await rig.until(lambda: "사슴을 1마리 잡았어" in rig.said(), 120)
     assert rig.world.bot.inventory.get("사슴 트로피", 0) == 1
     assert any(f.predicate == "flees" for f in mind.store.facts_about("사슴"))
+
+
+async def test_searching_goes_farther_out_until_it_finds_a_deer(make_rig: Callable[..., Any]) -> None:
+    # 실게임(2026-10-20): 제자리 둘레만 돌다 "사슴이 안 보여"로 리더에게 물었다. 들판 쪽으로 더 나가 본다.
+    world = field(deer(-70.0, 95.0))
+    world.bot.inventory = {"돌도끼": 1}
+    world.bot.known = {"돌도끼"}
+    rig: Rig = await make_rig(world=world, time_scale=16)
+    rig.controller.stance = "wait"
+    rig.controller.request(Goal("search", Tier.USER, {"name": "사슴"}, source="leader"))
+    await rig.until(
+        lambda: any(d.kind in ("done", "fail") and d.goal_kind == "search" for d in rig.controller.decisions),
+        120,
+    )
+    assert any(d.kind == "done" and d.goal_kind == "search" for d in rig.controller.decisions), rig.said()

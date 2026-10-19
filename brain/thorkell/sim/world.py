@@ -283,6 +283,8 @@ class SimWorld:
         self.said: list[tuple[str, str]] = []
         self.dodges = 0
         self.commands: dict[str, int] = {}
+        # 시험용: 땅의 높낮이(m). 집터 찾기가 이것보다 엄격하면 터를 못 찾는다.
+        self.ground_relief = 0.0
         self.outbox: list[dict[str, Any]] = []
         self.active: _Running | None = None
         self.queued: _Running | None = None
@@ -382,9 +384,11 @@ class SimWorld:
                 ]
             }
         if what == "site":
-            # 시뮬레이터 땅은 어디나 평평하다. 아무것도 없는 자리를 하나 준다.
+            # 시뮬레이터 땅의 높낮이는 어디나 ground_relief다(Body처럼 max_relief 기준, 기본 0.4m).
             x, z = self.bot.x + 3.0, self.bot.z + 3.0
-            return {"sites": [{"pos": [x, 0.0, z], "relief_m": 0.0}]}
+            if self.ground_relief >= float((args or {}).get("max_relief", 0.4)):
+                return {"sites": []}
+            return {"sites": [{"pos": [x, 0.0, z], "relief_m": self.ground_relief}]}
         if what == "pieces":
             return {
                 "pieces": [
@@ -903,7 +907,11 @@ class SimWorld:
                 }
             )
         # Body Scanner처럼 가까운 48개, 그리고 그 밖의 큰 생물.
-        shown = nearby[:48] + [e for e in nearby[48:] if e.get("size") == "large"]
+        beyond = nearby[48:]
+        shown = nearby[:48] + [e for e in beyond if e.get("size") == "large"]
+        # Body Scanner처럼 그 밖의 나무·통나무도 몇 개 보인다(커서 멀리서도 눈에 띈다).
+        for kind in ("tree", "log"):
+            shown += [e for e in beyond if e["kind"] == kind][:6]
         return {
             "nearby": shown,
             **({"boss_bars": boss_bars} if boss_bars else {}),

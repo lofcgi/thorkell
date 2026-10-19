@@ -43,6 +43,7 @@ SPOT_RADII = (3.0, 5.0)
 # 집터(평평하고 트인 6x5m)를 찾아보는 반경. 가까운 데서부터.
 SITE_RADII = (24, 40)
 SITE_FAR_M = 50.0
+SITE_RELIEF_M = (0.4, 0.7)
 SPOT_ANGLES = tuple(range(0, 360, 45))
 # 주운 것이 인벤토리에 들어오기까지(덤불에서 튕겨 나와 자동 줍기) 기다리는 시간
 PICK_SETTLE_S = 2.5
@@ -645,11 +646,16 @@ async def shelter(ctx: SkillContext) -> SkillOutcome:
         # 둘레 40m 떨어진 곳들을 본다. 실게임(2026-10-19, 20): 시작 신전 둘레는 짓지 못하고 비탈과 숲이라
         # 40m 안에 터가 없어 리더에게 어디에 지을지 물었다.
         anchor = _anchor(ctx)
-        for center, radius in _site_searches(anchor):
-            answer = await ctx.session.query(
-                "site", {"near": center, "width": 6, "depth": 5, "radius": radius}
-            )
-            sites = answer.data.get("sites", []) if answer.ok else []
+        # 먼저 아주 평평한 터를 찾고, 없으면 조금 울퉁불퉁해도 짓는다(사람도 그렇다). 실게임(2026-10-20):
+        # 시작 지점 언덕에서 높낮이 0.4m 미만인 6x5m 터가 50m 안에 없었다.
+        for relief in SITE_RELIEF_M:
+            for center, radius in _site_searches(anchor):
+                answer = await ctx.session.query(
+                    "site", {"near": center, "width": 6, "depth": 5, "radius": radius, "max_relief": relief}
+                )
+                sites = answer.data.get("sites", []) if answer.ok else []
+                if sites:
+                    break
             if sites:
                 break
         if not sites:

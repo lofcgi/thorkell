@@ -34,8 +34,10 @@ CHASE_LOSSES = 3
 # 몰래 다가가서 멈추는 거리(손이 닿는 거리 안).
 SNEAK_REACH_M = 1.6
 CLOSE_M = 5.0
-SEARCH_LEGS = 5
+SEARCH_LEGS = 8
 SEARCH_LEG_M = 30.0
+# 한 번 돌 때마다 처음 자리에서 이만큼(비율)씩 더 멀리 간다.
+SEARCH_GROWTH = 0.5
 COOK_S = 25.0
 COOK_SLOTS = 2
 
@@ -57,6 +59,8 @@ def _find(ctx: SkillContext, name: str) -> dict[str, Any] | None:
 # 이름표는 쳐다본 생물에게만 뜬다(30m 안). 찾는 동안 이름 모를 생물이 보이면 멈춰서 쳐다본다.
 LOOK_WITHIN_M = 30.0
 LOOKS_PER_PAUSE = 3
+# 탐색 한 번에 다가가서 볼 먼 생물 수.
+FAR_LOOKS_PER_LEG = 2
 
 
 async def look_around(ctx: SkillContext) -> None:
@@ -84,6 +88,18 @@ async def look_around(ctx: SkillContext) -> None:
     )
 
 
+def _far_unknown(ctx: SkillContext) -> dict[str, Any] | None:
+    """The nearest creature in view too far for its name tag, of a kind not known yet."""
+    far = [
+        e
+        for e in ctx.session.nearby("creature")
+        if not e.get("name")
+        and float(e["distance"]) > LOOK_WITHIN_M
+        and not (ctx.world is not None and e.get("key") and ctx.world.species_name(str(e["key"])))
+    ]
+    return min(far, key=lambda e: e["distance"]) if far else None
+
+
 def _bow(ctx: SkillContext) -> tuple[dict[str, Any], dict[str, Any]] | None:
     inventory = ctx.session.inventory()
     # 내구도가 0인 활은 부서져서 못 쓴다(실게임: 부서진 활로 41번 쏘려 했다).
@@ -102,16 +118,38 @@ async def search(ctx: SkillContext) -> SkillOutcome:
     """Look around for something called `name` the bot has not seen yet (or not nearby): walk out in legs,
     glancing at what comes into view. The body glances at creatures so their name tags show."""
     name = str(ctx.goal.args["name"])
+    # 처음 자리에서 점점 멀어지며 돈다(나선). 실게임(2026-10-20): 제자리 둘레 30m만 오가다 사슴을 못 찾고
+    # 리더에게 어디 있느냐고 물었다. 사람은 들판 쪽으로 더 나가 본다.
+    start = _here(ctx)
+
+    def found() -> bool:
+        return _find(ctx, name) is not None or any(e.get("name") == name for e in ctx.session.nearby())
+
     for leg in range(SEARCH_LEGS + 1):
         await _wait_scene(ctx)
         await look_around(ctx)
-        if _find(ctx, name) is not None or any(e.get("name") == name for e in ctx.session.nearby()):
+        # 멀리(이름표가 뜨는 30m 밖) 이름 모를 생물이 보이면 다가가서 본다("저건 뭐지?").
+        for _ in range(FAR_LOOKS_PER_LEG):
+            if found():
+                break
+            far = _far_unknown(ctx)
+            if far is None:
+                break
+            await _do(
+                ctx,
+                "move_to",
+                {"target": {"id": far["id"]}, "arrive_radius": LOOK_WITHIN_M - 5, "timeout_s": 30},
+                timeout=35,
+            )
+            await _wait_scene(ctx)
+            await look_around(ctx)
+        if found():
             return SkillOutcome(True, "found", tr(f"{josa(name, '을를')} 찾았어", f"Found the {name}"))
         if leg == SEARCH_LEGS:
             break
-        here = _here(ctx)
         angle = leg * 2.4 + 0.7
-        point = [here[0] + SEARCH_LEG_M * math.cos(angle), here[1], here[2] + SEARCH_LEG_M * math.sin(angle)]
+        reach = SEARCH_LEG_M * (1 + leg * SEARCH_GROWTH)
+        point = [start[0] + reach * math.cos(angle), start[1], start[2] + reach * math.sin(angle)]
         await _do(ctx, "move_to", {"target": {"pos": point}, "arrive_radius": 3.0}, timeout=60)
     return SkillOutcome(
         False,

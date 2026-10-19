@@ -16,6 +16,7 @@ from thorkell.control.library import SKILLS
 from thorkell.control.making import menu
 from thorkell.control.skills import SkillContext, SkillOutcome, _do
 from thorkell.lang import tr
+from thorkell.mind.korean import josa
 from thorkell.mind.store import Store
 from thorkell.models.gemini import ModelError
 from thorkell.plan.planner import PlanRejected, context_from_scene
@@ -257,6 +258,15 @@ async def _run_step(ctx: SkillContext, step: Step) -> SkillOutcome:
         case "equip" | "eat":
             result = await _do(ctx, step.skill, {"item": step.args["item"]})
             ok = result.status == "succeeded"
+            if result.code == "swimming":
+                return SkillOutcome(
+                    False,
+                    "swimming",
+                    tr(
+                        f"헤엄치는 중이라 {josa(str(step.args['item']), '을를')} 꺼낼 수 없어",
+                        f"I can't take out the {step.args['item']} while I'm swimming",
+                    ),
+                )
             ready = tr("준비됨", "ready") if ok else tr("실패", "failed")
             return SkillOutcome(ok, result.code, f"{step.args['item']} {ready}")
         case "say":

@@ -41,6 +41,7 @@ internal sealed class Scanner
     // 큰 생물은 멀리서도 보인다(사람은 키 3m짜리 사슴을 40m 밖에서도 본다). 보스 체력바가 뜨는 거리와 같다.
     public const float LargeRange = Parity.BossHudRadius;
     public const int MaxEntities = 48;
+    const int BigThingsBeyond = 6;
 
     readonly Collider[] buffer = new Collider[4096];
     readonly Dictionary<string, float> hovered = new Dictionary<string, float>();
@@ -117,7 +118,12 @@ internal sealed class Scanner
         // 가까운 것부터 MaxEntities개, 그리고 그 밖의 큰 생물(나무가 많아도 보스를 빠뜨리지 않는다).
         var nearest = found.OrderBy(e => e.Distance).ToList();
         var shown = nearest.Take(MaxEntities).ToList();
-        shown.AddRange(nearest.Skip(MaxEntities).Where(e => e.Size == "large"));
+        var beyond = nearest.Skip(MaxEntities).ToList();
+        shown.AddRange(beyond.Where(e => e.Size == "large"));
+        // 나무·통나무도 커서 멀리서 잘 보인다. 돌·나뭇가지가 많은 곳(시작 지점)에서 가까운 48개만 보내면
+        // 둘레의 나무가 빠져 "벨 나무가 안 보여"라고 했다(실게임 2026-10-20).
+        shown.AddRange(beyond.Where(e => e.Kind == "tree").Take(BigThingsBeyond));
+        shown.AddRange(beyond.Where(e => e.Kind == "log").Take(BigThingsBeyond));
         return shown;
     }
 

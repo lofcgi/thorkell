@@ -128,3 +128,45 @@ async def test_a_tree_too_hard_for_the_axe_is_left_before_the_axe_wears_out(
     await rig.until(lambda: "나무 10개 모았어" in rig.said(), 120)
     assert all(oak.hp == oak.max_hp for oak in oaks[1:])  # 한 그루에서 겪고 같은 종류는 건너뛴다
     assert not rig.world.bot.broken
+
+
+async def test_trees_out_of_sight_are_looked_for_farther_out(make_rig: Callable[..., Any]) -> None:
+    # 실게임(2026-10-20): 물가에서 제자리 20m만 둘러보고 "벨 나무가 안 보여"로 나무 부탁을 끝냈다.
+    trees = [
+        SimEntity(
+            f"7:8{i}", "tree", "", -60.0 + 3 * i, 45.0, 40.0, 40.0, becomes=[("log", "", 40.0, [("나무", 5)])]
+        )
+        for i in range(2)
+    ]
+    world = SimWorld(trees)
+    world.bot.inventory = {"돌도끼": 1}
+    world.bot.known = {"돌도끼", "나무"}
+    world.bot.foods = {"라즈베리": 1200.0}
+    rig: Rig = await make_rig(world=world, time_scale=16)
+    rig.controller.stance = "wait"
+    rig.controller.request(Goal("gather_wood", Tier.USER, {"count": 5}, source="leader"))
+    await rig.until(
+        lambda: any(
+            d.kind in ("done", "fail") and d.goal_kind == "gather_wood" for d in rig.controller.decisions
+        ),
+        120,
+    )
+    done = [d for d in rig.controller.decisions if d.kind == "done" and d.goal_kind == "gather_wood"]
+    assert done, rig.said()
+
+
+async def test_trees_it_cannot_reach_are_named_as_such(make_rig: Callable[..., Any]) -> None:
+    # 실게임(2026-10-20): 강 건너 나무만 보이는데 "벨 나무가 안 보여"라고 해서, 계획이 이유를 모른 채
+    # 같은 시도를 되풀이했다.
+    world = SimWorld([SimEntity("7:91", "tree", "", 5.0, 0.0, 40.0, 40.0, unreachable=True)])
+    world.bot.inventory = {"돌도끼": 1}
+    world.bot.known = {"돌도끼", "나무"}
+    world.bot.foods = {"라즈베리": 1200.0}
+    rig: Rig = await make_rig(world=world, time_scale=16)
+    rig.controller.stance = "wait"
+    rig.controller.request(Goal("gather_wood", Tier.USER, {"count": 5}, source="leader"))
+    await rig.until(
+        lambda: any(d.kind == "fail" and d.goal_kind == "gather_wood" for d in rig.controller.decisions), 120
+    )
+    failed = next(d for d in rig.controller.decisions if d.kind == "fail" and d.goal_kind == "gather_wood")
+    assert failed.reason_ko == "나무는 보이는데 다가갈 수가 없어(물 건너편이거나 막혀 있어)"

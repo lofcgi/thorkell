@@ -20,12 +20,14 @@ internal static class Sites
         var width = args["width"] != null ? (float)args["width"] : 6f;
         var depth = args["depth"] != null ? (float)args["depth"] : 5f;
         var radius = args["radius"] != null ? Mathf.Clamp((float)args["radius"], 4f, 40f) : 20f;
+        // 평평함 기준(m). 두뇌가 먼저 엄격하게 찾고, 없으면 느슨하게 다시 찾는다.
+        var maxRelief = args["max_relief"] != null ? Mathf.Clamp((float)args["max_relief"], .2f, 1f) : MaxRelief;
         var found = new List<(float relief, Vector3 point)>();
         for (var x = -radius; x <= radius; x += 2f)
             for (var z = -radius; z <= radius; z += 2f)
             {
                 var point = center + new Vector3(x, 0, z);
-                if (Vector3.Distance(point, center) > radius || !Relief(point, width, depth, out var relief, out var ground))
+                if (Vector3.Distance(point, center) > radius || !Relief(point, width, depth, out var relief, out var ground) || relief >= maxRelief)
                     continue;
                 // 시작 신전 둘레처럼 게임이 짓지 못하게 하는 곳(망치를 대면 빨갛게 보인다). 실게임(2026-10-20):
                 // 신전 옆을 집터로 골랐다가 "여긴 못 짓네"를 되풀이했다.
@@ -64,6 +66,6 @@ internal static class Sites
                     ground = hit.point;
             }
         relief = high - low;
-        return relief < MaxRelief;
+        return true;
     }
 }

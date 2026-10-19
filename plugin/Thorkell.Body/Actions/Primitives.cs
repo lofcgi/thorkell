@@ -183,6 +183,9 @@ internal sealed class MoveTo : IAction
     static readonly HarmonyLib.AccessTools.FieldRef<Character, Vector3> MoveDir = HarmonyLib.AccessTools.FieldRefAccess<Character, Vector3>("m_moveDir");
     static readonly HarmonyLib.AccessTools.FieldRef<Character, Vector3> CurrentVel = HarmonyLib.AccessTools.FieldRefAccess<Character, Vector3>("m_currentVel");
     readonly Thorkell.Core.StuckDetector stuck = new Thorkell.Core.StuckDetector(3.0, 0.3f);
+    // 끼였을 때 빠져나오는 방향(옆으로, 앞으로): 왼쪽, 오른쪽, 뒤, 앞.
+    static readonly (float side, float along)[] UnstuckMoves = { (-1f, 0f), (1f, 0f), (0f, -1f), (0f, 1f) };
+
     float started = -1f, nextPath, remaining = -1f, unstuckUntil = -1f;
     int unstucks, dropHeldBefore, doorsOpened;
     float nextDoor;
@@ -256,14 +259,17 @@ internal sealed class MoveTo : IAction
         }
         if (stuck.Update(now, remaining + Mathf.Max(0f, vertical - VerticalArrive)))
         {
-            if (++unstucks > 3)
+            if (++unstucks > UnstuckMoves.Length)
                 return Outcome.Failed("blocked", evidence);
-            // 옆으로 비켜서며 점프한다. 방향은 번갈아 바꾼다.
+            // 점프하며 왼쪽, 오른쪽, 뒤, 앞(넘어가기) 순서로 빠져나와 본다. 실게임(2026-10-20): 쓰러진 소나무
+            // 통나무 옆 구덩이에 끼어 양옆으로만 비켜서다 4분 동안 못 나왔다.
             var forward = point - position;
             forward.y = 0;
             forward.Normalize();
-            unstuckDirection = Vector3.Cross(Vector3.up, forward) * (unstucks % 2 == 0 ? 1f : -1f);
-            unstuckUntil = now + 0.8f;
+            var side = Vector3.Cross(Vector3.up, forward);
+            var (alongSide, along) = UnstuckMoves[unstucks - 1];
+            unstuckDirection = (side * alongSide + forward * along).normalized;
+            unstuckUntil = now + (along < 0 ? 1.2f : 0.8f);
             Motor.Intent.Jump = true;
             stuck.Reset();
             nextPath = 0;
@@ -461,6 +467,9 @@ internal sealed class Equip : IAction
         {
             if (self.IsItemEquiped(found))
                 return Outcome.Succeeded("already_equipped", evidence);
+            // 헤엄치는 동안은 게임이 무기·도구를 들지 못하게 한다. 이유를 알려야 물 밖으로 나올 생각을 한다.
+            if (self.IsSwimming())
+                return Outcome.Failed("swimming", evidence);
             self.EquipItem(found, true);
             return self.IsItemEquiped(found) ? Outcome.Succeeded("equipped", evidence) : Outcome.Failed("cannot_equip", evidence);
         }

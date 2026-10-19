@@ -92,7 +92,10 @@ Why these choices, what was tried and dropped, and what each model measured: **[
 Verified in the real game (macOS, Valheim 1.0.20) unless noted:
 
 - Joining as a second player into a crossplay host, chat both ways, following across the map.
-- Making an axe from nothing, chopping, asking how big a house should be, building a small shelter.
+- A new world from nothing in English, every step in one run: an axe from branches and stones, 20 wood
+  (making a new axe when the first breaks), asking how big a house should be, a small shelter, food for
+  the leader, a deer trophy. Not every run passes yet: getting stuck in terrain and harassment by
+  greylings still end some.
 - The first boss, Eikthyr, defeated together with a leader holding it in front: in Korean play and in 2
   of 5 English fights (October 2026, the clip above is one). The others ended with Thorkell dead or the fight
   stalled; he reflects after each and the next attempt cites what he learned. Fighting it alone is not

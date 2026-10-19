@@ -167,3 +167,23 @@ def test_a_building_site_is_looked_for_farther_out_before_asking() -> None:
     far = searches[2:]
     assert len(far) == 8
     assert all(math.isclose(math.hypot(c[0], c[2]), SITE_FAR_M) for c, _ in far)
+
+
+async def test_a_shelter_goes_up_on_slightly_uneven_ground(make_rig: Callable[..., Any]) -> None:
+    # 실게임(2026-10-20): 시작 지점 언덕에 높낮이 0.4m 미만인 터가 없어 쉼터를 못 지었다. 사람은 조금
+    # 울퉁불퉁해도 짓는다. 아주 평평한 터가 없으면 조금 덜 평평한 터를 고른다.
+    world = SimWorld(forest(3))
+    world.bot.inventory = {"나무": 40, "돌": 10, "망치": 1, "돌도끼": 1}
+    world.bot.known = set(world.bot.inventory)
+    world.bot.foods = {"라즈베리": 1200.0}
+    world.ground_relief = 0.6
+    rig: Rig = await make_rig(world=world)
+    rig.controller.stance = "wait"
+    rig.controller.request(Goal("shelter", Tier.USER, {}, source="leader"))
+    await rig.until(
+        lambda: any(
+            d.kind in ("done", "fail") and d.goal_kind == "shelter" for d in rig.controller.decisions
+        ),
+        120,
+    )
+    assert any(d.kind == "done" and d.goal_kind == "shelter" for d in rig.controller.decisions), rig.said()

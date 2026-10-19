@@ -47,6 +47,9 @@ UNSEEN_SCENES = 4
 TOOL_DAMAGE = ("chop", "pickaxe")
 # 나무를 하다 다가가지 못한 것은 이만큼 막히면 두고 다른 것을 찾는다.
 BLOCKED_TRIES = 2
+# 벨 나무가 안 보이면 둘러보는 횟수와 첫 거리(m). 갈수록 멀리 간다.
+EXPLORE_LEGS = 6
+EXPLORE_LEG_M = 20.0
 # 배운 것이 피해 기대치에 주는 배율. 들은 것(가설)은 직접 본 것보다 약하게 반영한다.
 KNOWLEDGE_MULTIPLIER = {
     ("weak_to", "verified"): 1.5,
@@ -305,17 +308,41 @@ async def gather_wood(ctx: SkillContext) -> SkillOutcome:
         tree = _nearest(ctx, "tree", skip=skip)
         target_entity = log or tree
         if target_entity is None:
-            if explored >= 3:
+            if explored >= EXPLORE_LEGS:
+                # 나무가 보이는데 고를 수 없는 것(다가가지 못함, 이 도끼로 안 베어짐)과 아예 없는 것은 다르다.
+                # 실게임(2026-10-20): 강 건너 나무만 보이는데 "안 보여"라고 해서 같은 시도를 되풀이했다.
+                if progress.get("too_hard_seen") and not given_up() - set(progress["too_hard_seen"]):
+                    return SkillOutcome(
+                        False,
+                        "trees_too_hard",
+                        tr(
+                            f"여기 나무는 {josa(tool['name'], '으로')} 안 베어져",
+                            f"The trees here are too hard for my {tool['name']}",
+                        ),
+                    )
+                if given_up():
+                    return SkillOutcome(
+                        False,
+                        "trees_unreachable",
+                        tr(
+                            "나무는 보이는데 다가갈 수가 없어(물 건너편이거나 막혀 있어)",
+                            "I can see trees, but I can't get to them (across water or blocked)",
+                        ),
+                    )
                 return SkillOutcome(
                     False,
                     "no_trees",
                     tr("주변에 벨 나무가 안 보여", "I don't see any trees to chop around here"),
                 )
             explored += 1
+            # 처음 자리에서 점점 멀어지며 찾는다. 실게임(2026-10-20): 물가에서 제자리 20m만 세 번 둘러보고
+            # "벨 나무가 안 보여"라고 했다.
             assert ctx.session.state is not None
             here = ctx.session.state.data["pos"]
+            origin = progress.setdefault("explore_from", list(here))
             angle = explored * 2.1
-            point = [here[0] + 20 * math.cos(angle), here[1], here[2] + 20 * math.sin(angle)]
+            reach = EXPLORE_LEG_M * (1 + (explored - 1) * 0.6)
+            point = [origin[0] + reach * math.cos(angle), here[1], origin[2] + reach * math.sin(angle)]
             await _do(ctx, "move_to", {"target": {"pos": point}, "arrive_radius": 2.0}, timeout=60)
             continue
 
@@ -340,6 +367,7 @@ async def gather_wood(ctx: SkillContext) -> SkillOutcome:
             # 실게임(2026-10-19): 돌도끼로 안 베어지는 나무를 85번 쳐서 도끼 둘이 닳아 부러졌다.
             # 사람은 "너무 단단함"이 뜨면 다른 나무로 간다.
             blocked[target_entity["id"]] = BLOCKED_TRIES
+            progress.setdefault("too_hard_seen", []).append(target_entity["id"])
             if target_entity.get("name"):
                 hard.add(f"{tool['name']}|{target_entity['name']}")
             continue
