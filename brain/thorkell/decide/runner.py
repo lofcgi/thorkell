@@ -61,7 +61,9 @@ class RuleDecider:
         match point.name:
             case "threat_response":
                 hp_fraction = float(context.get("hp_fraction", 1.0))
-                choice = "retreat_to_leader" if hp_fraction < 0.3 else "equip_best_then_fight"
+                offered = point.questions["threat_response"].criteria or []
+                low = hp_fraction < 0.3 and "retreat_to_leader" in offered
+                choice = "retreat_to_leader" if low else "equip_best_then_fight"
                 return {"threat_response": Answer(choice=choice, confidence=1.0)}
             case "speak_worthy":
                 return {"speak_worthy": Answer(score=float(context.get("urgency", 1)) + 1.0)}

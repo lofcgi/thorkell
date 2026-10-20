@@ -403,6 +403,9 @@ async def defend(ctx: SkillContext) -> SkillOutcome:
     name = str(ctx.goal.args.get("name") or tr("적", "the enemy"))
     deaths_before = len(ctx.session.events_of("creature_died"))
     unseen = 0
+    no_effect: set[str] = ctx.memory.setdefault("no_effect", set())
+    first_health: float | None = None
+    swings_without_effect = 0
     while True:
         if any(
             e.data.get("id") == attacker_id for e in ctx.session.events_of("creature_died")[deaths_before:]
@@ -424,6 +427,36 @@ async def defend(ctx: SkillContext) -> SkillOutcome:
                 ),
             )
         unseen = 0
+        health = enemy.get("health")
+        if health is not None:
+            if first_health is None:
+                first_health = float(health)
+            elif float(health) < first_health - 0.01:
+                swings_without_effect = 0
+                first_health = float(health)
+        # 쳐도 체력이 그대로인 것은 떨어져서 둔다(실게임 2026-10-20: 리더 기지의 훈련용 허수아비가
+        # 가까이 온 토르켈을 때렸다). 사람은 몇 번 쳐 보고 체력바가 안 줄면 그만둔다.
+        # 다시 맞아도 또 치지 않는다.
+        if attacker_id in no_effect or swings_without_effect >= NO_EFFECT_SWINGS:
+            no_effect.add(attacker_id)
+            await _do(
+                ctx,
+                "move_to",
+                {
+                    "target": {"pos": _away_from(ctx, enemy, STEP_AWAY_M)},
+                    "arrive_radius": 1.0,
+                    "timeout_s": 6,
+                },
+                timeout=8,
+            )
+            return SkillOutcome(
+                False,
+                "no_effect",
+                tr(
+                    f"아무리 쳐도 {name} 체력이 안 줄어. 떨어져 있을게",
+                    f"No matter how I hit it, {name} doesn't get hurt. I'll keep away from it",
+                ),
+            )
         state = ctx.session.state
         hurt = state is not None and state.data["hp"] / max(1.0, state.data["hp_max"]) < 0.3
         # 상대가 이미 많이 약해졌으면 끝까지 싸운다. 쫓아오는 적에게서 도망치다 맞는 게 더 위험하다.
@@ -439,6 +472,8 @@ async def defend(ctx: SkillContext) -> SkillOutcome:
             )
         weapon = await equip_for_fight(ctx, enemy.get("name"))
         result = await _attack(ctx, enemy, 1, weapon, timeout=10)
+        if result.status == "succeeded" and health is not None:
+            swings_without_effect += 1
         if result.evidence.get("destroyed"):
             return SkillOutcome(True, "killed", tr(f"{josa(name, '을를')} 해치웠어", f"Took down {name}"))
         if result.code == "out_of_reach":
@@ -450,6 +485,15 @@ async def defend(ctx: SkillContext) -> SkillOutcome:
             )
         elif result.code == "not_found":
             await _wait_scene(ctx)
+
+
+def _away_from(ctx: SkillContext, entity: dict[str, Any], metres: float) -> list[float]:
+    """A point `metres` from the entity, straight away from it past where Thorkell stands."""
+    assert ctx.session.state is not None
+    here = ctx.session.state.data["pos"]
+    dx, dz = here[0] - entity["pos"][0], here[2] - entity["pos"][2]
+    length = math.hypot(dx, dz) or 1.0
+    return [entity["pos"][0] + dx / length * metres, here[1], entity["pos"][2] + dz / length * metres]
 
 
 async def follow(ctx: SkillContext) -> SkillOutcome:
@@ -584,6 +628,9 @@ async def retreat(ctx: SkillContext) -> SkillOutcome:
     )
 
 
+# 쳐도 상대 체력이 그대로면 이만큼 휘두른 뒤 그만두고 이만큼 떨어진다.
+NO_EFFECT_SWINGS = 5
+STEP_AWAY_M = 7.0
 # 먹으려다 몸이 거절한 음식은 이만큼 다시 고르지 않는다(날고기처럼 먹을 수 없는 것, 이미 먹은 것).
 REFUSED_FOOD_S = 300.0
 # 큰 적에게 죽었을 때: 리더가 묘비에서 이만큼 안에 오면 같이 간다. 그때까지 리더 곁(이만큼 안)에 있는다.

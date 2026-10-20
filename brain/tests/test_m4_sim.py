@@ -13,7 +13,7 @@ from thorkell.decide.runner import DecisionRunner, RuleDecider
 from thorkell.models.gemini import ModelError
 from thorkell.models.systemone import Answer
 from thorkell.plan.planner import Planner
-from thorkell.sim.world import greydwarf
+from thorkell.sim.world import SimEntity, greydwarf
 
 PLAN = {
     "interpretation_ko": "해 지기 전에 쓸 나무를 모아 달라는 뜻",
@@ -103,6 +103,64 @@ async def test_threat_decision_chooses_to_fight(make_rig: Callable[..., Any]) ->
     threat = [d for d in rig.controller.decisions if d.kind == "threat"]
     assert threat and "equip_best_then_fight" in threat[0].reason_ko
     assert not rig.world.bot.dead
+
+
+class RetreatWhenOffered:
+    """Like Jev in the real game (2026-10-20): picks running to the leader whenever it is an option."""
+
+    name = "jev"
+
+    def __init__(self) -> None:
+        self.offered: list[list[str]] = []
+
+    async def decide(self, point: Point, state: str, context: dict[str, Any]) -> dict[str, Answer]:
+        options = list(point.questions["threat_response"].criteria or [])
+        self.offered.append(options)
+        choice = "retreat_to_leader" if "retreat_to_leader" in options else "fight"
+        return {"threat_response": Answer(choice=choice, confidence=0.9)}
+
+
+async def test_beside_the_leader_running_to_the_leader_is_not_an_option(make_rig: Callable[..., Any]) -> None:
+    # 실게임(2026-10-20, 사용자 플레이): 리더 3m 옆에서 둘에게 맞는 동안 매번 "리더 쪽으로 물러나기"를 골랐다.
+    # 물러나기는 바로 "네 옆으로 피했어"로 끝나고 다음 피격에 또 골라,
+    # 40초 동안 같은 말만 하고 반격하지 않았다.
+    decider = RetreatWhenOffered()
+    rig: Rig = await make_rig(decider=DecisionRunner({"threat_response": decider}))
+    rig.world.leader = (rig.world.bot.x + 2.0, rig.world.bot.z)
+    rig.world.spawn(greydwarf(rig.world.bot.x - 3, rig.world.bot.z))
+    await rig.until(lambda: "7:900" not in rig.world.entities, timeout=40)
+    assert decider.offered and all("retreat_to_leader" not in options for options in decider.offered)
+    assert not any("네 옆으로 피했어" in text for text in rig.said())
+
+
+async def test_something_that_hits_back_but_never_gets_hurt_is_left(make_rig: Callable[..., Any]) -> None:
+    # 실게임(2026-10-20, 사용자 플레이): 리더 기지의 훈련용 허수아비(전투 형제)가 가까이 온 토르켈을 때렸다.
+    # 체력은 늘 100%다. 사람은 몇 번 쳐 보고 체력이 그대로면 떨어진다.
+    rig: Rig = await make_rig(decider=DecisionRunner({"threat_response": RuleDecider()}))
+    bot = rig.world.bot
+    dummy = SimEntity(
+        "7:930",
+        "creature",
+        "전투 형제",
+        bot.x + 1.5,
+        bot.z,
+        hp=100.0,
+        max_hp=100.0,
+        hostile=True,
+        damage=0.9,
+        speed=0.0,
+        aggro=2.5,
+        multipliers={"blunt": 0.0, "slash": 0.0, "pierce": 0.0},
+    )
+    rig.world.spawn(dummy)
+    await rig.until(lambda: any("안 줄어" in text for text in rig.said()), 60)
+    await rig.until(
+        lambda: rig.world.distance(dummy.x, dummy.z) > 4.0 and rig.controller.current() is None, 30
+    )
+    hits = rig.world.commands.get("attack", 0)
+    await asyncio.sleep(3)
+    assert rig.world.commands.get("attack", 0) == hits  # 떨어진 뒤에는 다시 치지 않는다
+    assert not bot.dead
 
 
 class SlowDecider:

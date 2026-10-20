@@ -41,6 +41,21 @@ THREAT_RESPONSE = Point(
     },
 )
 
+def threat_response(beside_leader: bool) -> Point:
+    """The threat question with only the options that can be done now. Beside the leader, running back to
+    the leader is not one: in the real game (2026-10-20) Jev picked it on every hit while Thorkell stood 3 m
+    from the leader, so the retreat ended at once and he never fought back."""
+    if not beside_leader:
+        return THREAT_RESPONSE
+    options = {k: v for k, v in THREAT_OPTIONS.items() if k != "retreat_to_leader"}
+    question = THREAT_RESPONSE.questions["threat_response"]
+    return Point(
+        THREAT_RESPONSE.name,
+        THREAT_RESPONSE.deadline_s,
+        {"threat_response": Question(question.type, question.instructions, options)},
+    )
+
+
 SPEAK_WORTHY = Point(
     "speak_worthy",
     0.8,

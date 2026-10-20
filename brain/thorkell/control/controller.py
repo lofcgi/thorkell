@@ -21,7 +21,7 @@ from thorkell.control.goals import Decision, Goal, Tier
 from thorkell.control.library import SKILLS
 from thorkell.control.plan_skills import handle_request
 from thorkell.control.skills import SkillContext, SkillOutcome, food_to_eat
-from thorkell.decide.points import THREAT_RESPONSE
+from thorkell.decide.points import threat_response
 from thorkell.decide.runner import DecisionRunner
 from thorkell.lang import tr
 from thorkell.mind.korean import josa
@@ -56,6 +56,8 @@ DIED_EN = "Ah… I died. I'm back up. I'll go get my stuff."
 DEFAULT_WOOD = 20
 # 리더가 누운 걸 보고 자러 가려다 안 됐으면 이만큼 지나서 다시 본다(같은 실패를 되풀이하지 않게).
 SLEEP_RETRY_S = 120.0
+# 리더에게서 이만큼 안이면 이미 리더 곁이다(물러나기 skill은 2.5m까지 다가간다).
+BESIDE_LEADER_M = 5.0
 # 주의: 큰 생물이 나를 알아채고 이만큼 안에 있으면 어떻게 할지 생각할 차례다.
 # 무엇인지, 어떻게 할지는 모델이 정한다.
 # 생각해서 싸운 뒤(못 찾음 등)에는 이만큼 지나서 다시 본다.
@@ -328,7 +330,9 @@ class Controller:
             recent=[f"took {event.data.get('amount')} damage from {name}"],
         )
         hp = (state["hp"] / max(1.0, state["hp_max"])) if state else 1.0
-        decided = await self.decider.ask(THREAT_RESPONSE, text, {"hp_fraction": hp})
+        leader = scene.get("leader") if scene else None
+        beside = leader is not None and float(leader["distance"]) <= BESIDE_LEADER_M
+        decided = await self.decider.ask(threat_response(beside), text, {"hp_fraction": hp})
         choice = decided.choice("threat_response")
         if decided.status != "ok" or choice is None:
             # 마감을 넘기면 숨은 기본 행동은 없다. 몸의 self_defense 반사가 막고, 다음 피격 때 다시 묻는다.
