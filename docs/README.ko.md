@@ -92,7 +92,7 @@ uv run --env-file ../.env thorkell play --rehearsal helloworld --config thorkell
 
 ### 첫 보스까지 같이 하기
 
-`--config thorkell.play.toml`(실제 모델)로 실행해야 정해진 말이 아닌 부탁과 싸움 판단이 된다. 토르켈에게 이렇게 해 볼 수 있다.
+`--config thorkell.play.toml`(실제 모델)로 실행해야 정해진 말이 아닌 부탁과 싸움 판단이 된다. 새 월드부터 엑시르까지 단계별로 무엇을 말하면 되는지는 [`docs/play/new-world-to-eikthyr.md`](play/new-world-to-eikthyr.md)에 있다. 토르켈에게 이렇게 해 볼 수 있다.
 
 | 해 볼 것 | 토르켈이 하는 일 |
 |---|---|

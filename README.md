@@ -122,6 +122,9 @@ cd .. && dotnet build Thorkell.sln -c Release && cd brain
 uv run --env-file ../.env thorkell play --rehearsal thorkell-en --new --config thorkell.play.en.toml
 ```
 
+A step-by-step play script from a new world to Eikthyr (what to say, what to expect, what is verified) is in
+[docs/play/new-world-to-eikthyr.md](docs/play/new-world-to-eikthyr.md) (Korean, with the English lines).
+
 Your real installation, saves, Steam Cloud and settings are never written: both games run from APFS clones
 under `~/Library/Application Support/Thorkell/` inside a `sandbox-exec` profile, and every run checks
 afterwards that nothing of yours changed. A small macOS app (`tools/gui`, `build.sh`) wraps the same

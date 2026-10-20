@@ -654,7 +654,7 @@ real Gemini model on simulated situations. "Simulator" means pytest scenarios ag
 | Seeing with his own screen (portal, sign, leader) | Real game (`sight`) |
 | Doors and portals | Real game (`travel`) |
 | Axe from nothing, 20 wood, asking how big a house, building a small shelter, food, a deer trophy | Real game (`fresh`, Korean and English; every step in one English run on 2026-10-20, not every run) |
-| Finding food in a new world, hunting a deer for its trophy | Simulator only; in the real game the food step timed out before a validator fix, and the deer step was not reached |
+| Finding food in a new world, hunting a deer for its trophy | Real game once (English `fresh`, 2026-10-20); in earlier runs the food step timed out before a validator fix, and the deer step was not reached |
 | Eikthyr with the leader | Real game: cleared on co-op runs 4 and 5 (Korean), on 2 of 5 English fights, then 3 of 3 English first attempts after the fixes (2026-10-20), with a test-only invulnerable bare-handed harness leader |
 | Eikthyr alone | Not cleared: more than 15 attempts with one memory; best boss health 78% |
 | Fight judgment, reflection, following lessons, leaving a summon alone | Real model (`judge`) and real game |
@@ -673,7 +673,7 @@ real Gemini model on simulated situations. "Simulator" means pytest scenarios ag
   person shoots every second or two), and distance lessons can keep him backing off from a boss that keeps
   chasing. Shots blocked by trees (35 to 55 in some runs) and bow durability (one crude bow lasts about
   six minutes of fighting) also limit him.
-- **Food and deer in a new world** have not passed in the real game.
+- **Food and deer in a new world** have passed in the real game only once (English `fresh`, 2026-10-20).
 - **Thresholds still in code**: when to eat (`food_to_eat`), the defend skill's back-off at 30% health, the
   reflex thresholds and the bow-strafing constants. Following the user's "don't go to extremes", they
   move to judgment only when a failure shows they should; the last is a body skill and may stay.
