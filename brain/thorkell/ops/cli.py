@@ -137,6 +137,9 @@ def cmd_scenario(args: argparse.Namespace) -> int:
     if (args.mind is not None or args.together) and args.name != "boss":
         print("[ERR] --mind와 --together는 boss 시나리오에서만 씁니다.")
         return 2
+    if args.mortal_leader and not args.together:
+        print("[ERR] --mortal-leader는 --together와 같이 씁니다.")
+        return 2
     timeout = args.timeout or SCENARIO_TIMEOUT_S.get(args.name, 300)
     try:
         if args.name == "talk":
@@ -154,7 +157,14 @@ def cmd_scenario(args: argparse.Namespace) -> int:
         elif args.name == "boss":
             report = asyncio.run(
                 scenario.run_boss(
-                    args.game_root, args.backend, timeout, args.config, args.mind, args.together, args.record
+                    args.game_root,
+                    args.backend,
+                    timeout,
+                    args.config,
+                    args.mind,
+                    args.together,
+                    args.record,
+                    args.mortal_leader,
                 )
             )
         else:
@@ -301,6 +311,11 @@ def main(argv: list[str] | None = None) -> int:
         "--together",
         action="store_true",
         help="boss: 리더가 '같이 잡자'고 하고 맨손으로 보스 곁에서 주의를 끈다(시험 전용 무적)",
+    )
+    peer.add_argument(
+        "--mortal-leader",
+        action="store_true",
+        help="boss --together: 리더가 무적 없이 음식을 먹고 몽둥이로 막는다(사람 리더처럼 죽을 수 있다)",
     )
     peer.add_argument(
         "--record",

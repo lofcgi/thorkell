@@ -53,6 +53,7 @@ cd brain && uv run thorkell scenario primitives
 cd brain && uv run thorkell scenario actions|skills
 # 첫 보스: 제단에 트로피 → 토르켈이 알아채고 생각해서 싸움 → 회고. 같은 --mind로 다시 돌리면 두 번째 도전
 # --together: 리더가 "같이 잡자"고 하고 맨손으로 보스 곁에서 막는다(시험 전용 무적). 빼면 리더는 "혼자 해 봐"
+# --mortal-leader(--together와 같이): 리더가 무적 없이 음식 세 칸을 먹고 몽둥이로 막는다. 사람 리더처럼 쓰러질 수 있다
 cd brain && uv run --env-file ../.env thorkell scenario boss [--together] --config thorkell.play.toml --mind ../artifacts/boss-mind.sqlite
 # 눈: 토르켈 자신의 화면을 찍어(look) 비전 모델로 읽는다(포털·표지판 앞, 사방·한쪽, 속도) / 문 열고 오두막 들어가기·포털 건너기
 cd brain && uv run --env-file ../.env thorkell scenario sight --config thorkell.play.toml
@@ -159,6 +160,12 @@ cd brain && uv run --env-file ../.env thorkell play --rehearsal helloworld --con
 - 쓰러진 짐승의 전리품은 `creature_died`의 자리에서 줍는다(마지막으로 본 자리는 달리던 만큼 어긋난다). 무엇이 나왔는지는 싸우기 전 인벤토리와 비교한다.
 - 시간이 지난 질의(`look`)의 답이 늦게 오면 버린다. 안 그러면 링크 처리기가 죽는다.
 - 몸이 실패한 동작은 두뇌 기록(brain.log)에 남긴다. 실패 원인을 찾을 근거가 됐다.
+
+## 죽을 수 있는 리더와 보스 (2026-10-20, boss --mortal-leader) — 반복하지 않는다
+
+- 몸이 플레이어 시체를 통째로 버려서, 앞에서 막던 리더가 쓰러져도 토르켈은 몰랐다. 같은 방법으로 쏘다 번개에 죽었다. 시체는 2초 안에 그 자리(3m)에 보였던 플레이어로 맞춰 `creature_died`(리더 id, `player: true`)로 알린다(`Falls.FallenPlayer`). 생물 쪽 판정(`Falls.Fallen`)은 그대로 플레이어 시체를 생물로 읽지 않는다.
+- 리더가 쓰러지면 싸움을 다시 판단한다("The leader is down!"). 기록과 회고에 쓰러진 시각이 남는다.
+- 막지도 구르지도 않는 하네스 리더는 50초 안팎에 쓰러진다. 그 뒤는 혼자 싸움이라 세 번 다 졌다(보스 59%, 58%, 29%). 사람 리더가 버티는지가 같이 잡기의 관건이다.
 
 ## Eira(이전 시도)에서 배운 것 — 반복하지 않는다
 

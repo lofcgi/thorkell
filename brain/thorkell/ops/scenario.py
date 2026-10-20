@@ -64,6 +64,8 @@ LEADER_WATCHES_EN = "I can't help with the fighting. I'll watch from far away. Y
 LEADER_HOLDS_EN = (
     "Let's take him down together! I'll hold him up front, you shoot him with the bow from behind"
 )
+# --mortal-leader: 사람 리더처럼 음식 세 칸을 채우고 싸운다(시험 fixture).
+MORTAL_LEADER_FOOD = ["CookedMeat", "Raspberry", "Mushroom"]
 GAME_ARGS = ["-batchmode", "-screen-width", "640", "-screen-height", "360", "-screen-fullscreen", "0"]
 # 아침으로 넘긴 시간이 봇에게 전해질 때까지.
 MORNING_SYNC_S = 3.0
@@ -1074,6 +1076,7 @@ async def run_boss(
     mind_path: Path | None = None,
     together: bool = False,
     record: bool = False,
+    mortal_leader: bool = False,
 ) -> dict[str, Any]:
     """E5: the first boss in the real game. The leader stands near the Eikthyr altar (test-only move);
     Thorkell has two deer trophies, food and a bow and offers the trophies. Nobody tells him to fight: he
@@ -1081,7 +1084,9 @@ async def run_boss(
     remembers), fights, and thinks the fight over. `mind_path` keeps his memory across runs, so a second run
     is a second attempt by the same Thorkell. The server's 'defeated_eikthyr' key confirms a kill
     independently of what the brain believes. `together`: the leader says it will hold the boss and stays by
-    it bare-handed (test-only god mode), like a person fighting in front; otherwise Thorkell fights alone."""
+    it bare-handed (test-only god mode), like a person fighting in front; otherwise Thorkell fights alone.
+    `mortal_leader` (with `together`): the leader has eaten and swings a club without god mode, so it can die
+    like a person holding the boss; whether and when it died is in the report."""
     from thorkell.ops import play  # play imports this module
 
     if config_path is None:
@@ -1192,7 +1197,10 @@ async def run_boss(
                     offered_by = await goal("offer", {"item": names["TrophyDeer"]}, 120)
                 if together:
                     # 시험 전용: 사람이 앞에서 막듯 리더가 보스 곁에 붙는다(맨손이라 혼자서는 못 잡는다).
-                    offered_by["leader"] = (await cues.do({"fight": "Eikthyr"}))["detail"]
+                    holds: dict[str, Any] = {"fight": "Eikthyr"}
+                    if mortal_leader:
+                        holds |= {"mortal": True, "weapon": "Club", "eat": MORTAL_LEADER_FOOD}
+                    offered_by["leader"] = (await cues.do(holds))["detail"]
                 return offered_by
 
             await run.step("offer_trophies", offer)
@@ -1256,6 +1264,11 @@ async def run_boss(
                 {"input": u.input_tokens, "output": u.output_tokens} for u in tactician.usage
             ]
             run.extra["planner_calls"] = len(planner.usage)
+            if mortal_leader:
+                events = run.host.root / "leader-events.jsonl"
+                run.extra["leader_died"] = [
+                    json.loads(line) for line in (events.read_text().splitlines() if events.is_file() else [])
+                ]
     return run.report
 
 

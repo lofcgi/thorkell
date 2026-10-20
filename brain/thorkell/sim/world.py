@@ -425,6 +425,14 @@ class SimWorld:
             SimEntity(self.new_id(), "item", name, x + 0.6, z + 0.6, stack=count, auto_pickup=False)
         )
 
+    def leader_falls(self, respawn_at: tuple[float, float] = (0.0, -300.0)) -> None:
+        """The leader dies: the body drops where they stood (Body `creature_died` with the leader's id), and
+        they come back at the spawn far away."""
+        x, z = self.leader
+        if self.distance(x, z) <= LEADER_LOADED_M:
+            self.event("creature_died", {"id": "7:1", "size": "medium", "pos": [x, 0.0, z]})
+        self.leader = respawn_at
+
     def leader_says(self, text: str, talker: str = "normal") -> None:
         data: dict[str, Any] = {"from": "Leader", "talker": talker, "text": text, "distance": 6.0}
         if STOP_PHRASE.search(text):

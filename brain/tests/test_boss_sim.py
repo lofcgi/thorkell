@@ -724,3 +724,29 @@ async def test_before_judging_a_fight_it_looks_at_the_foe(make_rig: Callable[...
     assert "[화면]" in model.prompts["tactic"][0]
     assert "리더 곁에 땅에서 솟은 거대한 뿌리가 꿈틀댄다" in model.prompts["tactic"][0]
     assert len(seeing.calls[0]["images"]) == 1
+
+
+async def test_when_the_leader_falls_it_thinks_the_fight_over(make_rig: Callable[..., Any]) -> None:
+    # 실게임(2026-10-20, 죽을 수 있는 리더): 앞에서 막던 리더가 50초 만에 쓰러졌는데, 토르켈은 그걸 모른 채
+    # 같은 방법으로 쏘다가 보스에게 번개 다섯 번을 맞고 죽었다.
+    # 사람은 친구가 쓰러지는 것을 보고 다시 판단한다.
+    model = JudgmentModel(
+        [
+            tactic(eat_first=False, retreat_to_leader=True),
+            tactic(style="keep_away", keep_m=30.0, speech_ko="리더가 쓰러졌어! 일단 거리를 벌릴게"),
+        ],
+        [reflection()],
+    )
+    rig: Rig = await make_rig(world=arena(), time_scale=4, **thinking(model))
+    rig.controller.stance = "wait"
+    boss = eikthyr(22.0, 0.0)
+    boss.speed = 0.5
+    rig.world.spawn(boss)
+    await rig.until(lambda: rig.world.bot.inventory["나무 화살"] < 78, 30)
+    rig.world.leader_falls()
+    await rig.until(lambda: len(model.prompts["tactic"]) == 2, 20)
+    assert any("리더가 쓰러졌어!" in text for text in rig.said())
+    assert "쓰러졌다" in model.prompts["tactic"][1]
+    await rig.until(lambda: "리더가 쓰러졌어! 일단 거리를 벌릴게" in rig.said(), 10)
+    # 지금 싸움의 기록(다시 생각할 때 보는 것)에 리더가 언제 쓰러졌는지가 있다.
+    assert "리더가" in model.prompts["tactic"][1] and "초에 쓰러짐" in model.prompts["tactic"][1]

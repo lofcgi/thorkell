@@ -282,4 +282,13 @@ public class FallsTests
     {
         Assert.Equal(-1, Falls.Fallen(false, new[] { (IsPlayer: false, Distance: 5f) }, 3f));
     }
+
+    [Fact]
+    public void APlayersBodyIsTheNearestPlayerSeenJustBefore()
+    {
+        // 죽은 리더의 캐릭터는 없어졌어도 0.3초 전에 그 자리에 보였다. 10초 전에 거기 있었던 사람은 아니다.
+        var seen = new[] { (Distance: 0.5f, AgeS: 10f), (Distance: 1.1f, AgeS: 0.3f), (Distance: 40f, AgeS: 0f) };
+        Assert.Equal(1, Falls.FallenPlayer(seen, 3f, 2f));
+        Assert.Equal(-1, Falls.FallenPlayer(new[] { (Distance: 6f, AgeS: 0f) }, 3f, 2f));
+    }
 }

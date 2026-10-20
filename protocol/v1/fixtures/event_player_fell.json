@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "t": "event",
+  "seq": 91,
+  "ts": 1790000004900,
+  "kind": "creature_died",
+  "tick": 9150,
+  "data": {
+    "id": "76561198012345678:2",
+    "size": "medium",
+    "player": true,
+    "pos": [301.2, 79.1, -41.8]
+  }
+}

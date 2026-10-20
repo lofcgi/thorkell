@@ -22,6 +22,8 @@ namespace Thorkell.NativeHarness;
 //                                                  넘기는 동안은 밤을 지나므로 다 넘긴 뒤에 끝났다고 알린다.
 //  {"id": 7, "fight": "Eikthyr", "weapon": "Club"}  시험용: 리더가 그 생물 곁에 붙어 휘두르며 주의를 끈다(무적).
 //                                                  weapon을 빼면 맨손이다(리더 혼자 잡지 못하게). 바로 끝나고 뒤에서 계속한다.
+//      "mortal": true, "eat": ["CookedMeat"]       무적을 끄고 그 음식을 먹고 싸운다(사람 리더처럼 맞으면 죽는다).
+//                                                  죽으면 싸움을 멈추고 leader-events.jsonl에 {"event":"died"}를 남긴다.
 // 끝나면 leader-cue-done.jsonl에 {"id", "ok", "detail", "pos"}를 쓴다.
 // 사람 화면의 채팅창에 찍힌 줄은 host-chat.jsonl로 내보낸다(토르켈의 말이 어떤 이름으로 찍히는지 본다).
 public sealed partial class Harness
@@ -31,6 +33,8 @@ public sealed partial class Harness
     JObject cue;
     string fightPrefab;
     Character fightTarget;
+    Player fighter;
+    bool mortalFighter;
     float nextSwing;
     Vector3? cueTarget;
     bool cueTeleported;
@@ -167,7 +171,17 @@ public sealed partial class Harness
     // 시험 전용: 사람이 앞에서 싸워 주는 같이 하기를 흉내 낸다. 무적이고, 걷는 입력이 없어 곁으로 옮겨 붙는다.
     void StartLeaderFight(Player local)
     {
-        local.SetGodMode(true);
+        var mortal = cue["mortal"] != null && (bool)cue["mortal"];
+        local.SetGodMode(!mortal);
+        mortalFighter = mortal;
+        fighter = local;
+        foreach (var food in cue["eat"]?.Values<string>() ?? Enumerable.Empty<string>())
+        {
+            var item = local.GetInventory().AddItem(food, 1, 1, 0, 0L, "thorkell test fixture", true)
+                ?? throw new InvalidOperationException("no item " + food);
+            if (!local.EatFood(item))
+                throw new InvalidOperationException("leader could not eat " + food);
+        }
         var weapon = (string)cue["weapon"];
         if (!string.IsNullOrEmpty(weapon))
         {
@@ -177,7 +191,20 @@ public sealed partial class Harness
         }
         fightPrefab = (string)cue["fight"];
         fightTarget = null;
-        CueDone(true, "fighting " + fightPrefab + " with " + (string.IsNullOrEmpty(weapon) ? "bare hands" : weapon));
+        CueDone(true, "fighting " + fightPrefab + " with " + (string.IsNullOrEmpty(weapon) ? "bare hands" : weapon)
+            + (mortal ? ", mortal, health " + local.GetMaxHealth().ToString("F0") : ", god mode"));
+    }
+
+    // 죽은 리더의 Player는 없어지고(m_localPlayer가 비었다가) 다시 태어나면 새 Player가 된다.
+    // 다시 태어난 리더가 보스 곁으로 옮겨 붙지 않게 싸움을 멈추고 죽음을 남긴다.
+    void WatchLeaderDeath()
+    {
+        if (!mortalFighter || fightPrefab == null || (fighter != null && !fighter.IsDead()))
+            return;
+        var died = new JObject { ["event"] = "died", ["fighting"] = fightPrefab, ["unix"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0 };
+        File.AppendAllText(Path.Combine(root, "leader-events.jsonl"), died.ToString(Formatting.None) + "\n");
+        Logger.LogInfo("HARNESS: the leader died fighting " + fightPrefab);
+        fightPrefab = null;
     }
 
     void LeaderFights(Player local)

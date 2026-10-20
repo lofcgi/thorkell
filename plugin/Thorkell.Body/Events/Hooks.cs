@@ -89,6 +89,11 @@ internal static class Hooks
             around.Add((character.IsPlayer(), Vector3.Distance(character.transform.position, at)));
         }
         var playerRagdoll = __instance.name.StartsWith("Player_ragdoll", StringComparison.Ordinal);
+        if (playerRagdoll)
+        {
+            PlayerFell(self, at);
+            return;
+        }
         var index = Falls.Fallen(playerRagdoll, around, FallMatchDistance);
         if (index < 0)
             return;
@@ -97,6 +102,41 @@ internal static class Hooks
         {
             ["id"] = Ids.Of(fallen),
             ["size"] = Scanner.SizeOf(fallen),
+            ["pos"] = new JArray(Math.Round(at.x, 2), Math.Round(at.y, 2), Math.Round(at.z, 2)),
+        });
+    }
+
+    // 다른 플레이어를 마지막으로 본 자리. 죽은 플레이어의 캐릭터는 시체가 생길 때 이미 없을 수 있다.
+    static readonly Dictionary<string, (Vector3 Pos, float At)> playersSeen = new Dictionary<string, (Vector3, float)>();
+    const float PlayerSeenMaxAgeS = 2f;
+
+    internal static void NotePlayers(Player self)
+    {
+        foreach (var player in Player.GetAllPlayers())
+        {
+            if (player != null && player != self && !player.IsDead())
+                playersSeen[Ids.Of(player)] = (player.transform.position, Time.time);
+        }
+    }
+
+    static void PlayerFell(Player self, Vector3 at)
+    {
+        var ids = new List<string>();
+        var seen = new List<(float Distance, float AgeS)>();
+        foreach (var entry in playersSeen)
+        {
+            ids.Add(entry.Key);
+            seen.Add((Vector3.Distance(entry.Value.Pos, at), Time.time - entry.Value.At));
+        }
+        var index = Falls.FallenPlayer(seen, FallMatchDistance, PlayerSeenMaxAgeS);
+        if (index < 0)
+            return;
+        playersSeen.Remove(ids[index]);
+        EventSink.Emit("creature_died", new JObject
+        {
+            ["id"] = ids[index],
+            ["size"] = "medium",
+            ["player"] = true,
             ["pos"] = new JArray(Math.Round(at.x, 2), Math.Round(at.y, 2), Math.Round(at.z, 2)),
         });
     }

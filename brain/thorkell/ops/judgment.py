@@ -27,7 +27,7 @@ from thorkell.config import secret
 from thorkell.control.controller import Controller
 from thorkell.control.goals import Goal
 from thorkell.lang import Language, tr
-from thorkell.mind.store import Store
+from thorkell.mind.store import Episode, Store
 from thorkell.models.gemini import GeminiJson, ModelError
 from thorkell.paths import REPO_ROOT
 from thorkell.plan.planner import Planner, PlannerConfig
@@ -476,6 +476,68 @@ def _fights_with_leader(tactic: Tactic, _: Store) -> str | None:
     return None
 
 
+# 실게임(2026-10-20, 죽을 수 있는 리더): 앞에서 막던 리더가 48초에 쓰러졌다. 토르켈은 모른 채 같은 방법으로
+# 쏘다가 번개 다섯 번을 맞고 죽었다. 이제 쓰러지는 것을 보고 다시 판단한다.
+def _leader_down() -> tuple[FightView, list[Episode]]:
+    together = tr(
+        "같이 잡자! 내가 앞에서 막을게, 넌 뒤에서 쏴",
+        "Let's take him down together! I'll hold him up front, you shoot from behind",
+    )
+    view = _first_sight_view()
+    view = replace(
+        view,
+        seen_ko=view.seen_ko.replace(
+            tr("체력 100%, 25m 앞", "health 100%, 25 m ahead"),
+            tr("체력 62%, 18m 앞", "health 62%, 18 m ahead"),
+        ),
+        me_ko=view.me_ko.replace(tr("체력 60/60", "health 60/60"), tr("체력 41/60", "health 41/60")),
+        leader_ko=tr(
+            "싸움 48초에 쓰러졌다(쓰러진 자리에 시체가 있다). 지금은 안 보인다\n"
+            f'리더가 최근에 한 말: "{together}"',
+            "Fell 48 s into the fight (the body lies where they fell). Now not in sight\n"
+            f'what the leader said lately: "{together}"',
+        ),
+    )
+    now = {
+        "looks": _looks(18, "3.5"),
+        "tactic": {
+            "impression_ko": tr(
+                "리더가 막는 동안 뒤에서 쏠 보스", "A boss to shoot from behind while the leader holds it"
+            ),
+            "style": "ranged",
+            "keep_m": 20.0,
+            "close_m": 12.0,
+            "retreat_hp": 0.4,
+            "return_hp": 0.8,
+            "hits_then_back": 0,
+            "eat_first": True,
+            "retreat_to_leader": True,
+            "speech_ko": tr("뒤에서 쏠게!", "I'll shoot from behind!"),
+            "cites": [],
+        },
+        "food_slots": 3,
+        "hits": [[51.0, 13.8, 17, ["lightning"]]],
+        "shots": {"fired": 6, "hit": 4, "no_line_of_sight": 2},
+        "health": [[3.0, 1.0], [40.0, 0.7], [52.0, 0.62]],
+        "leader_fell_s": 48.0,
+        "leader_m": 12,
+        "seconds": 53.0,
+    }
+    return view, [Episode("now", _eikthyr(), tr("싸우는 중", "still fighting"), now)]
+
+
+async def _sees_leader_down(tactician: Tactician, _: Store) -> Tactic:
+    view, earlier = _leader_down()
+    return await tactician.tactic(view, earlier, [])
+
+
+def _stops_backing_to_leader(tactic: Tactic, _: Store) -> str | None:
+    # 쓰러진 리더 쪽(시체)으로 물러나면 지켜 줄 사람이 없다. 무엇을 할지는 모델이 정한다.
+    if not tactic.retreat_to_leader:
+        return f"리더 없이 다시 정함({tactic.style}, {tactic.keep_m:g}m): {tactic.speech_ko}"
+    return None
+
+
 FIGHT_CASES = [
     FightCase("boss_seen", _first_sight, _keeps_away, "화면 위 체력바를 보고 보스로 여겨 거리를 둠"),
     FightCase("boss_again", _second_try, _follows_lessons, "지난 교훈(거리·음식)을 인용해 따름"),
@@ -493,6 +555,12 @@ FIGHT_CASES = [
         "리더가 앞에서 막겠다면 뒤에서 쏘고 리더 쪽으로 물러남",
     ),
     FightCase("summon_said", _summon_seen, _leaves_it, "리더가 소환했다고 한 것은 적으로 보지 않고 둠"),
+    FightCase(
+        "leader_down",
+        _sees_leader_down,
+        _stops_backing_to_leader,
+        "앞에서 막던 리더가 쓰러진 것을 보고 리더 쪽으로 물러나지 않게 다시 정함",
+    ),
     FightCase(
         "boss_stalled",
         _reflect_on_stall,

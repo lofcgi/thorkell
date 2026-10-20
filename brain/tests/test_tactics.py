@@ -183,6 +183,7 @@ async def test_the_fight_judge_cases_accept_the_answers_they_describe() -> None:
         "boss_alone": tactic(retreat_to_leader=False),
         "boss_together": tactic(),
         "summon_said": tactic(style="leave", speech_ko="네가 부른 거구나, 그냥 둘게"),
+        "leader_down": tactic(retreat_to_leader=False, speech_ko="리더가 쓰러졌어! 내가 끌고 다닐게"),
         "boss_stalled": reflection(
             what_happened_ko="78%로 깎았지만 물러나 있던 65초 동안 회복도 못 하고 상대만 80%로 회복했다",
             after_death="with_leader",
@@ -194,3 +195,5 @@ async def test_the_fight_judge_cases_accept_the_answers_they_describe() -> None:
         assert result["ok"], result
         if case.name in ("boss_alone", "boss_together"):
             assert "리더가 최근에 한 말" in model.prompts[0]
+        if case.name == "leader_down":
+            assert "싸움 48초에 쓰러졌다" in model.prompts[0] and "리더가 48초에 쓰러짐" in model.prompts[0]

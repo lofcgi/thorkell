@@ -169,6 +169,7 @@ public sealed partial class Harness : BaseUnityPlugin
             return;
         }
 
+        WatchLeaderDeath();
         var local = Player.m_localPlayer;
         if (local == null)
             return;

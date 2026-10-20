@@ -112,6 +112,7 @@ internal sealed class BodyLink
                 Attention.Update(self, scanner, runner.ActiveOp, Reflexes.Arbiter.Owner != null);
             }
             scanner.NoteHover(self);
+            Events.Hooks.NotePlayers(self);
             if (!self.IsDead())
                 AttackWatch.Update(self);
             PollWorld(self);

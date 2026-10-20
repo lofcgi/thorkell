@@ -191,6 +191,16 @@ async def _judge(
     return await ctx.tactician.tactic(view, earlier, lessons)
 
 
+def _leader_fell(ctx: SkillContext, leader_ids: set[str], deaths_before: int) -> bool:
+    """The leader's body dropped where they stood (`creature_died` with the id the leader had while seen)."""
+    leader = ctx.session.scene.data.get("leader") if ctx.session.scene else None
+    if leader is not None and leader.get("id"):
+        leader_ids.add(str(leader["id"]))
+    return any(
+        str(e.data.get("id")) in leader_ids for e in ctx.session.events_of("creature_died")[deaths_before:]
+    )
+
+
 def _leave(ctx: SkillContext, record: dict[str, Any]) -> SkillOutcome:
     """Decided it is not a foe: leave it be and do not take it up again (unless it attacks)."""
     ctx.goal.progress["remembered"] = True  # 싸우지 않았다. 싸움 기록·회고가 아니다
@@ -272,6 +282,15 @@ def describe(ctx: SkillContext, name: str, creature: dict[str, Any]) -> FightVie
         leader_ko = tr(f"{leader_m}m 떨어져 있다", f"{leader_m}m away")
     else:
         leader_ko = tr("안 보인다", "not in sight")
+    fell = ctx.goal.progress.get("leader_fell_s")
+    if fell is not None:
+        leader_ko = (
+            tr(
+                f"싸움 {fell:g}초에 쓰러졌다(쓰러진 자리에 시체가 있다). 지금은 ",
+                f"Fell {fell:g} s into the fight (the body lies where they fell). Now ",
+            )
+            + leader_ko
+        )
     if ctx.mind is not None:
         since = time.time() - LEADER_WORDS_S
         words = [t for who, t in ctx.mind.store.recent_utterances(since=since) if who == ctx.mind.leader_name]
@@ -346,6 +365,7 @@ async def _carry_out(ctx: SkillContext, name: str, tactic: Tactic, record: dict[
     used_seq = -1
     messages_from = len(ctx.session.events_of("game_message"))
     held_at_start = _held(ctx)  # 전리품이 무엇인지는 싸우기 전과 비교한다(쓰러지면 곁의 것은 바로 주워진다)
+    leader_ids: set[str] = set()
     while True:
         _round += 1
         # 지난 차례 뒤에 새 장면이 이미 왔으면 기다리지 않는다(쏘는 동안 온 장면으로 바로 다음 화살을 당긴다).
@@ -356,6 +376,15 @@ async def _carry_out(ctx: SkillContext, name: str, tactic: Tactic, record: dict[
         if progress.pop("heard", False):
             # 리더가 싸우는 중에 말했다(그 말은 기억에 있다). 사람은 듣고 다시 판단한다.
             changed = await _rethink(ctx, name, record, None)
+            if isinstance(changed, SkillOutcome):
+                return changed
+            tactic = changed
+            gained_at = now
+        if _leader_fell(ctx, leader_ids, deaths_before) and "leader_fell_s" not in progress:
+            # 앞에서 막던 리더가 쓰러졌다(실게임 2026-10-20: 모른 채 같은 방법으로 쏘다가 번개를 맞고 죽었다).
+            # 사람은 친구가 쓰러지는 것을 보고 다시 판단한다.
+            progress["leader_fell_s"] = record["leader_fell_s"] = record["seconds"]
+            changed = await _rethink(ctx, name, record, tr("리더가 쓰러졌어!", "The leader is down!"))
             if isinstance(changed, SkillOutcome):
                 return changed
             tactic = changed

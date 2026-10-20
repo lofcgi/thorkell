@@ -404,6 +404,9 @@ def episode_line(episode: Episode) -> str:
             tr("한 일: ", "time spent: ")
             + ", ".join(f"{_doing(what)} {round(secs)}{unit}" for what, (_, secs) in spent)
         )
+    if record.get("leader_fell_s") is not None:
+        fell = round(record["leader_fell_s"])
+        parts.append(tr(f"리더가 {fell}초에 쓰러짐", f"the leader fell at {fell} s"))
     if record.get("others"):
         others = len(record["others"])
         parts.append(tr(f"다른 놈에게 맞은 것 {others}번", f"hit by others {others} times"))
@@ -427,6 +430,9 @@ def record_ko(episode: Episode) -> str:
         lines.append(tr(f"{at:g}초에 바꾼 방법: ", f"Changed at {at:g} s to: ") + tactic_ko(changed))
     seconds = round(record.get("seconds", 0))
     lines.append(tr(f"결과: {episode.outcome} ({seconds}초)", f"Result: {episode.outcome} ({seconds} s)"))
+    if record.get("leader_fell_s") is not None:
+        fell = record["leader_fell_s"]
+        lines.append(tr(f"리더가 쓰러진 때: {fell:g}초", f"The leader fell at: {fell:g} s"))
     if record.get("ate"):
         lines.append(tr("싸우기 전에 먹은 것: ", "Ate before the fight: ") + ", ".join(record["ate"]))
     slots = record.get("food_slots", "?")
