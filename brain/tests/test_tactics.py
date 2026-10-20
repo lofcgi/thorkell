@@ -197,3 +197,29 @@ async def test_the_fight_judge_cases_accept_the_answers_they_describe() -> None:
             assert "리더가 최근에 한 말" in model.prompts[0]
         if case.name == "leader_down":
             assert "싸움 48초에 쓰러졌다" in model.prompts[0] and "리더가 48초에 쓰러짐" in model.prompts[0]
+
+
+def test_hits_right_after_a_wind_up_it_did_not_roll_from_are_remembered() -> None:
+    # 실게임(2026-10-20, 리더가 쓰러진 뒤 혼자): 공격 동작을 15~20번 보고도 6~16m 안에서만 굴렀고, 번개는
+    # 13~29m에서 맞았다. 사람은 "저 자세 뒤에 번개가 왔다"를 기억한다. 몇 m에서 구를지는 기억으로 정한다.
+    store = Store()
+    episode = store.add_episode(
+        "에이크쉬르",
+        "died",
+        {
+            "tactic": tactic(dodge_within_m=8.0),
+            "hits": [
+                [10.0, 13.0, 20, ["lightning"]],
+                [30.0, 12.0, 6, ["pierce"]],
+                [50.0, 14.0, 25, ["lightning"]],
+            ],
+            "wind_ups": [[8.6, 21.0, False], [29.0, 6.0, True], [48.9, 26.0, False], [70.0, 18.0, False]],
+            "saw_attacks": 4,
+            "dodged": 1,
+            "seconds": 80.0,
+        },
+    )
+    text = record_ko(episode)
+    assert "공격 동작을 보고 안 구른 뒤 3초 안에 맞은 것: 2번(동작을 본 거리 21~26m)" in text
+    assert "보고 구른 뒤 3초 안에 맞은 것: 1번" in text  # 6m에서 굴렀지만 뿔에 맞았다
+    assert "안 구른 공격 동작 뒤에 맞은 것 2번(21~26m)" in episode_line(episode)

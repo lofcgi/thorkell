@@ -50,6 +50,7 @@ log = logging.getLogger(__name__)
 # 돌며 쏘고 몇 발마다 방향을 바꾼다(좌우를 번갈아 움직이면 제자리라 날아오는 것을 못 피했다).
 DODGE_STAMINA = 15.0
 SHOTS_PER_SIDE = 5
+WIND_UPS_KEPT = 80  # 싸움 기록에 남기는 공격 동작 수(오래 싸워도 프롬프트가 넘치지 않게)
 # 지킬 거리보다 이만큼 더 멀면 다가가서 쏜다(화살이 닿는 거리).
 SHOOT_SLACK_M = 10.0
 # 생각하는 동안 가만히 서 있지 않는다. 이 안으로 다가오면 일단 물러선다.
@@ -804,11 +805,18 @@ def _winding_up(ctx: SkillContext, tactic: Tactic, record: dict[str, Any], creat
     seen = [e for e in new if e.data.get("id") == creature_id]
     record["saw_attacks"] = int(record.get("saw_attacks", 0)) + len(seen)
     state = ctx.session.state.data if ctx.session.state else {}
-    return (
+    rolls = (
         tactic.dodge_within_m > 0
         and any(float(e.data.get("distance", 999.0)) <= tactic.dodge_within_m for e in seen)
         and float(state.get("stamina", 0)) >= DODGE_STAMINA
     )
+    # 언제 몇 m에서 봤고 굴렀는지. 맞은 때와 이어서 "저 동작 뒤에 번개가 왔다"를 기억한다.
+    at = round(time.monotonic() - float(progress["began"]), 1)
+    wind_ups = record.setdefault("wind_ups", [])
+    for event in seen:
+        wind_ups.append([at, round(float(event.data.get("distance", -1.0)), 1), rolls])
+    del wind_ups[:-WIND_UPS_KEPT]
+    return rolls
 
 
 async def _watching(

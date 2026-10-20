@@ -356,6 +356,23 @@ def _doing(what: str) -> str:
     return tr(DOING_KO.get(what, what), DOING_EN.get(what, what))
 
 
+AFTER_WIND_UP_S = 3.0  # 공격 동작을 보고 이만큼 안에 맞으면 그 동작의 공격으로 친다
+
+
+def _after_wind_ups(record: dict[str, Any], rolled: bool) -> list[float]:
+    """Distances of the wind-ups (rolled from or not) that a hit from the foe followed within seconds."""
+    hits = [float(h[0]) for h in record.get("hits", [])]
+    out = []
+    for at, distance, did_roll in record.get("wind_ups", []):
+        if bool(did_roll) == rolled and any(0 <= hit - at <= AFTER_WIND_UP_S for hit in hits):
+            out.append(float(distance))
+    return out
+
+
+def _span(distances: list[float]) -> str:
+    return f"{min(distances):g}~{max(distances):g}m"
+
+
 def episode_line(episode: Episode) -> str:
     """One line per earlier fight, for the tactic prompt."""
     record = episode.record
@@ -403,6 +420,14 @@ def episode_line(episode: Episode) -> str:
         parts.append(
             tr("한 일: ", "time spent: ")
             + ", ".join(f"{_doing(what)} {round(secs)}{unit}" for what, (_, secs) in spent)
+        )
+    unrolled = _after_wind_ups(record, rolled=False)
+    if unrolled:
+        parts.append(
+            tr(
+                f"안 구른 공격 동작 뒤에 맞은 것 {len(unrolled)}번({_span(unrolled)})",
+                f"got hit right after {len(unrolled)} wind-ups I didn't roll from ({_span(unrolled)})",
+            )
         )
     if record.get("leader_fell_s") is not None:
         fell = round(record["leader_fell_s"])
@@ -491,6 +516,21 @@ def record_ko(episode: Episode) -> str:
             tr(
                 f"상대의 공격 동작을 본 것: {seen}번, 보고 구른 것: {dodged}번",
                 f"Saw it start an attack: {seen} times, rolled away: {dodged} times",
+            )
+        )
+    if record.get("wind_ups"):
+        seen_at = [float(w[1]) for w in record["wind_ups"]]
+        unrolled, rolled = _after_wind_ups(record, rolled=False), _after_wind_ups(record, rolled=True)
+        lines.append(
+            tr(
+                f"공격 동작을 본 거리: {_span(seen_at)}. "
+                f"공격 동작을 보고 안 구른 뒤 3초 안에 맞은 것: {len(unrolled)}번"
+                + (f"(동작을 본 거리 {_span(unrolled)})" if unrolled else "")
+                + f", 보고 구른 뒤 3초 안에 맞은 것: {len(rolled)}번",
+                f"Distance when I saw it start an attack: {_span(seen_at)}. "
+                f"Hit within 3 s of a wind-up I didn't roll from: {len(unrolled)} times"
+                + (f" (wind-ups seen at {_span(unrolled)})" if unrolled else "")
+                + f"; hit within 3 s after rolling: {len(rolled)} times",
             )
         )
     shots = record.get("shots", {})
