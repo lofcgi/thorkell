@@ -1240,6 +1240,7 @@ async def run_boss(
                     "tactic": episode.record.get("tactic"),
                     "hits": episode.record.get("hits"),
                     "shots": episode.record.get("shots"),
+                    "blocked_moves": episode.record.get("blocked_moves"),
                     "boss_health": episode.record.get("health", [])[-1:],
                     "reflection": thought[-1] if thought else None,
                 }

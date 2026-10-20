@@ -138,9 +138,11 @@ internal static class Geometry
     const float StepHeight = .45f;
 
     // 눈에서 대상까지 가리는 것이 없는지. 대상 자신의 콜라이더에 먼저 닿으면 보이는 것이다.
-    public static bool LineOfSight(Player actor, GameObject target, Vector3 targetPoint)
+    public static bool LineOfSight(Player actor, GameObject target, Vector3 targetPoint) =>
+        LineOfSightFrom(actor.m_eye != null ? actor.m_eye.position : actor.transform.position + Vector3.up * 1.6f, target, targetPoint);
+
+    static bool LineOfSightFrom(Vector3 eye, GameObject target, Vector3 targetPoint)
     {
-        var eye = actor.m_eye != null ? actor.m_eye.position : actor.transform.position + Vector3.up * 1.6f;
         var delta = targetPoint - eye;
         if (!Physics.Raycast(eye, delta.normalized, out var hit, delta.magnitude, SightMask, QueryTriggerInteraction.Ignore))
             return true;
@@ -150,6 +152,56 @@ internal static class Geometry
     // 생물은 몸 어디라도 보이면 보이는 것이다. 몸 가운데는 땅에 가깝게 낮아서 작은 언덕에도 가린다(실게임: 16m 앞 멧돼지).
     public static bool SeesCreature(Player actor, Character creature) =>
         LineOfSight(actor, creature.gameObject, creature.GetCenterPoint()) || LineOfSight(actor, creature.gameObject, creature.GetTopPoint());
+
+    // 시야가 막혔을 때 가까이에서 그 생물이 보이는 자리(가장 가까운 곳). 사람은 막은 나무·바위를 보고 돌아선다.
+    // 옆으로 몇 걸음으로는 넓은 덤불을 못 벗어났다(실게임 2026-10-20: 쏘려던 44번 중 19번이 막혔다).
+    // 물속, 상대에게 너무 가까운 곳, 가는 길이 막힌 곳은 빼고, 지금보다 상대와 많이 멀어지지 않는 곳만 본다.
+    public static Vector3? ClearSpot(Player actor, Character creature)
+    {
+        var here = actor.transform.position;
+        var eyeHeight = actor.m_eye != null ? actor.m_eye.position.y - here.y : 1.6f;
+        var to = creature.transform.position - here;
+        to.y = 0;
+        var now = to.magnitude;
+        foreach (var radius in ClearSpotRadii)
+        {
+            Vector3? best = null;
+            var bestShift = float.MaxValue;
+            for (var i = 0; i < ClearSpotDirections; i++)
+            {
+                var angle = i * Mathf.PI * 2f / ClearSpotDirections;
+                var spot = here + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * radius;
+                spot.y = ZoneSystem.instance.GetGroundHeight(spot);
+                if (spot.y < Floating.GetLiquidLevel(spot, 1f, LiquidType.Water))
+                    continue;
+                var away = creature.transform.position - spot;
+                away.y = 0;
+                if (away.magnitude < Mathf.Min(now, ClearSpotNearestM) || away.magnitude > now + ClearSpotFartherM)
+                    continue;
+                var chest = Vector3.up * 1f;
+                var path = spot + chest - (here + chest);
+                if (Physics.Raycast(here + chest, path.normalized, path.magnitude, LowMask, QueryTriggerInteraction.Ignore))
+                    continue;
+                var eye = spot + Vector3.up * eyeHeight;
+                if (!LineOfSightFrom(eye, creature.gameObject, creature.GetCenterPoint()) && !LineOfSightFrom(eye, creature.gameObject, creature.GetTopPoint()))
+                    continue;
+                var shift = Mathf.Abs(away.magnitude - now);
+                if (shift < bestShift)
+                {
+                    bestShift = shift;
+                    best = spot;
+                }
+            }
+            if (best.HasValue)
+                return best;
+        }
+        return null;
+    }
+
+    static readonly float[] ClearSpotRadii = { 3f, 5f, 8f, 12f };
+    const int ClearSpotDirections = 16;
+    const float ClearSpotNearestM = 8f;
+    const float ClearSpotFartherM = 6f;
 
     // 시야를 막은 것(진단용, 두뇌가 아니라 결과 증거와 로그에만 싣는다).
     public static string Blocker(Player actor, Vector3 targetPoint)

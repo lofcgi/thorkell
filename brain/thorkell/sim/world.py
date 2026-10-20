@@ -199,6 +199,7 @@ class SimEntity:
     hidden: bool = False
     # 시험용: 이 자리(3m 안)에서는 보이긴 해도 화살 길이 막힌다(나무 사이로 보이는 것).
     cover_from: tuple[float, float] | None = None
+    cover_m: float = 3.0  # cover_from에서 이 거리 안에서는 시야가 막힌다(나무 덤불의 크기)
     # 시험용: 보이지만 다가갈 수 없다(바위 틈에 낀 통나무). Body MoveTo처럼 막혔다(blocked)고 돌아온다.
     unreachable: bool = False
     # 건축물: 지은 사람. 줍는 것(pickable): 주우면 생기는 아이템.
@@ -1337,8 +1338,14 @@ class _Shoot(_SimAction):
         distance = world.distance(target.x, target.z)
         if distance > 60:
             return "failed", "out_of_range", {"distance_m": round(distance, 1)}
-        if target.cover_from is not None and world.distance(*target.cover_from) <= 3.0:
-            return "failed", "no_line_of_sight", {"distance_m": round(distance, 1)}
+        if target.cover_from is not None and world.distance(*target.cover_from) <= target.cover_m:
+            # 몸(Body Geometry.ClearSpot): 가까이에서 보이는 자리를 찾아 함께 알린다.
+            cx, cz = target.cover_from
+            dx, dz = target.x - cx, target.z - cz
+            length = math.hypot(dx, dz) or 1.0
+            out = target.cover_m + 1.0
+            clear = [cx - dz / length * out, 0.0, cz + dx / length * out]
+            return "failed", "no_line_of_sight", {"distance_m": round(distance, 1), "clear_from": clear}
         if self.release_at is None:
             self.release_at = now + 1.2
             self.ticked_at = now

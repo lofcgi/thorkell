@@ -659,18 +659,24 @@ async def _carry_out(ctx: SkillContext, name: str, tactic: Tactic, record: dict[
                 shots[shot.code] = shots.get(shot.code, 0) + 1
                 killed = killed or bool(shot.evidence.get("killed"))
                 if shot.code == "no_line_of_sight":
-                    # 나무·바위에 막혔다. 같은 자리에서 다시 쏘지 않고 옆으로 몇 걸음 옮긴다
-                    # (실게임: 같은 자리에서 55번 다시 쏘려 했다).
+                    # 나무·바위에 막혔다. 같은 자리에서 다시 쏘지 않는다(실게임: 55번 다시 쏘려 했다).
+                    # 몸이 가까이에서 보이는 자리를 찾았으면 그리로, 못 찾았으면 옆으로 몇 걸음 옮긴다
+                    # (실게임 2026-10-20: 몇 걸음으로는 넓은 덤불을 못 벗어나 44번 중 19번이 막혔다).
                     side = -side
+                    clear = shot.evidence.get("clear_from")
+                    # 진단: 몸이 보이는 자리를 찾아 준 횟수(못 찾으면 옆걸음).
+                    moved = "to_clear_spot" if clear else "sidestep"
+                    record.setdefault("blocked_moves", {}).setdefault(moved, 0)
+                    record["blocked_moves"][moved] += 1
                     with _timed(record, "reposition"):
                         await act(
                             "move_to",
                             {
-                                "target": {"pos": _aside(ctx, creature, side)},
+                                "target": {"pos": list(clear) if clear else _aside(ctx, creature, side)},
                                 "arrive_radius": 1.0,
-                                "timeout_s": 4,
+                                "timeout_s": 6 if clear else 4,
                             },
-                            6,
+                            8 if clear else 6,
                         )
             continue
         weapon = await equip_for_fight(ctx, name)

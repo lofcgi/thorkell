@@ -663,6 +663,25 @@ async def test_no_line_of_sight_means_move_not_shoot_again(make_rig: Callable[..
     assert rig.world.commands.get("shoot", 0) < 12
 
 
+async def test_behind_wide_cover_it_moves_to_where_it_can_see(make_rig: Callable[..., Any]) -> None:
+    # 실게임(2026-10-20, 리더가 쓰러진 뒤 혼자): 쏘려던 44번 중 19번이 시야가 막혔다. 옆으로 몇 걸음으로는
+    # 넓은 덤불을 못 벗어난다. 사람은 보이는 자리로 간다(몸이 찾아 준 자리).
+    model = JudgmentModel([tactic(eat_first=False)], [reflection()])
+    rig: Rig = await make_rig(world=arena(), time_scale=4, **thinking(model))
+    rig.controller.stance = "wait"
+    boss = eikthyr(25.0, 0.0)
+    boss.speed, boss.ranged_m = 0.0, 0.0
+    boss.hp = boss.max_hp = 5000.0
+    rig.world.spawn(boss)
+    await rig.until(lambda: bool(model.prompts["tactic"]), 20)
+    boss.cover_from, boss.cover_m = (rig.world.bot.x, rig.world.bot.z), 8.0
+    arrows = rig.world.bot.inventory["나무 화살"]
+    await rig.until(lambda: rig.world.bot.inventory["나무 화살"] < arrows - 2, 30)
+    assert rig.world.commands.get("shoot", 0) < 10
+    goal = rig.controller.current()
+    assert goal is not None and goal.progress["record"]["blocked_moves"]["to_clear_spot"] >= 1
+
+
 async def test_a_big_thing_that_is_not_a_foe_is_left_alone(
     make_rig: Callable[..., Any], monkeypatch: Any
 ) -> None:

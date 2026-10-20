@@ -972,7 +972,13 @@ internal sealed class Shoot : IAction
         if (distance > MaxRange)
             return Outcome.Failed("out_of_range", new JObject { ["distance_m"] = Math.Round(distance, 1) });
         if (!Geometry.SeesCreature(self, target))
-            return Outcome.Failed("no_line_of_sight", new JObject { ["distance_m"] = Math.Round(distance, 1), ["blocked_by"] = Geometry.Blocker(self, target.GetTopPoint()) });
+        {
+            var blocked = new JObject { ["distance_m"] = Math.Round(distance, 1), ["blocked_by"] = Geometry.Blocker(self, target.GetTopPoint()) };
+            var clear = Geometry.ClearSpot(self, target);
+            if (clear.HasValue)
+                blocked["clear_from"] = new JArray(Math.Round(clear.Value.x, 2), Math.Round(clear.Value.y, 2), Math.Round(clear.Value.z, 2));
+            return Outcome.Failed("no_line_of_sight", blocked);
+        }
         if (hpBefore == null)
         {
             hpBefore = target.GetHealth();
